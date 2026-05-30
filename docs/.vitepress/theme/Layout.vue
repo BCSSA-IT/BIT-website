@@ -3,6 +3,9 @@
     <template v-if="frontmatter.bit3d" #home-hero-before>
       <BitHome />
     </template>
+    <template #layout-bottom>
+      <SiteFooter v-if="!frontmatter.bit3d" />
+    </template>
     <template v-for="(_, name) in $slots" #[name]="slotData">
       <slot :name="name" v-bind="slotData" />
     </template>
@@ -13,6 +16,7 @@
 import DefaultTheme from 'vitepress/theme'
 import { useData } from 'vitepress'
 import BitHome from './components/BitHome.vue'
+import SiteFooter from './components/SiteFooter.vue'
 
 const { frontmatter } = useData()
 </script>

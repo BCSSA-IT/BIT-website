@@ -12,6 +12,9 @@
       <p class="tower-copy__body">系统搭建&nbsp;&nbsp;·&nbsp;&nbsp;技术支持&nbsp;&nbsp;·&nbsp;&nbsp;数字化运营</p>
     </div>
     <div ref="fiatLuxSub" class="fiat-lux-sub">要有光</div>
+    <div ref="footerEl" class="bit-home-footer">
+      <SiteFooter />
+    </div>
     <canvas ref="canvas" />
   </div>
 </template>
@@ -22,6 +25,7 @@ import * as THREE from 'three'
 import { LineSegments2 } from 'three/addons/lines/LineSegments2.js'
 import { LineSegmentsGeometry } from 'three/addons/lines/LineSegmentsGeometry.js'
 import { LineMaterial } from 'three/addons/lines/LineMaterial.js'
+import SiteFooter from './SiteFooter.vue'
 
 const container = ref<HTMLDivElement>()
 const canvas = ref<HTMLCanvasElement>()
@@ -29,6 +33,7 @@ const docLabel = ref<HTMLDivElement>()
 const bulbCopy = ref<HTMLDivElement>()
 const towerCopy = ref<HTMLDivElement>()
 const fiatLuxSub = ref<HTMLDivElement>()
+const footerEl = ref<HTMLDivElement>()
 
 let renderer: THREE.WebGLRenderer
 let scene: THREE.Scene
@@ -130,6 +135,11 @@ function onScroll() {
     const fadeOut5 = Math.max(0, 1 - scrollProgress5 * 3)
     towerCopy.value.style.opacity = String(eased4 * fadeOut5)
     towerCopy.value.style.transform = `translateY(${(1 - eased4) * 24}px)`
+  }
+  if (footerEl.value) {
+    const fadeIn = Math.max(0, Math.min(1, (scrollProgress6 - 0.80) / 0.20))
+    footerEl.value.style.opacity = String(fadeIn)
+    footerEl.value.style.pointerEvents = fadeIn > 0 ? 'auto' : 'none'
   }
 }
 
@@ -961,5 +971,15 @@ canvas {
   will-change: opacity, transform;
 }
 
-
+/* ── Home page footer ── */
+.bit-home-footer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  opacity: 0;
+  pointer-events: none;
+  will-change: opacity;
+  z-index: 10;
+}
 </style>

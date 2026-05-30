@@ -5,20 +5,29 @@ export default defineConfig({
   title: "BIT-DOCs",
   description: "Workflow documentation and project setup guides for the BCSSA IT Department.",
   themeConfig: {
-    // https://vitepress.dev/reference/default-theme-config
     nav: [
-      { text: 'Home', link: '/' },
-      { text: 'Examples', link: '/markdown-examples' }
-    ],
-
-    sidebar: [
+      { text: '主页', link: '/' },
       {
-        text: 'Examples',
+        text: '摄影摄像',
         items: [
-          { text: 'Markdown Examples', link: '/markdown-examples' },
-          { text: 'Runtime API Examples', link: '/api-examples' }
+          { text: '相机使用',     link: '/photography/camera' },
+          { text: '视频照片格式', link: '/photography/formats' },
         ]
-      }
+      },
+      {
+        text: '后期制作',
+        items: [
+          { text: '照片后期', link: '/post/photo' },
+          { text: '视频后期', link: '/post/video' },
+        ]
+      },
+      {
+        text: '技术开发',
+        items: [
+          { text: '计算机项目', link: '/dev/projects' },
+          { text: '环境搭建',   link: '/dev/setup' },
+        ]
+      },
     ],
 
     socialLinks: [
