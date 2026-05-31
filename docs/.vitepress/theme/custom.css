@@ -57,19 +57,20 @@
 }
 
 /* ── Day ⇄ night circular-reveal transition ─────────────────────────
-   Scoped to .vt-theme (added to <html> only during the appearance toggle):
-   the JS in Layout.vue grows the incoming theme as a circle, fully covering
-   the viewport before teardown so there's no end-of-transition flash.
-   Page-navigation transitions (no .vt-theme) keep the default crossfade. */
-.vt-theme::view-transition-old(root),
-.vt-theme::view-transition-new(root) {
+   The theme toggle is the only thing that uses the View Transitions API
+   (page navigation uses the CSS entrance animation below), so these rules
+   apply unconditionally: no default crossfade, and the incoming theme grows
+   on top via the JS clip in Layout.vue — fully covering the viewport before
+   teardown, so there's no end-of-transition flash. */
+::view-transition-old(root),
+::view-transition-new(root) {
   animation: none;
   mix-blend-mode: normal;
 }
-.vt-theme::view-transition-old(root) {
+::view-transition-old(root) {
   z-index: 1;
 }
-.vt-theme::view-transition-new(root) {
+::view-transition-new(root) {
   z-index: 2147483646;
 }
 

@@ -43,35 +43,25 @@ provide('toggle-appearance', async ({ clientX: x, clientY: y }: MouseEvent) => {
     Math.max(y, innerHeight - y),
   )
 
-  // Mark the root so the theme-toggle CSS (custom clip, no default fade) applies.
-  // Page-navigation transitions keep the default crossfade.
-  const root = document.documentElement
-  root.classList.add('vt-theme')
-
-  const transition = (document as any).startViewTransition(async () => {
+  await (document as any).startViewTransition(async () => {
     isDark.value = !isDark.value
     await nextTick()
-  })
+  }).ready
 
-  try {
-    await transition.ready
-    // Grow the *incoming* theme as a circle on top of the outgoing one. It fully
-    // covers the viewport before teardown, so the handoff is seamless — no flash.
-    await root.animate(
-      {
-        clipPath: [
-          `circle(0px at ${x}px ${y}px)`,
-          `circle(${endRadius}px at ${x}px ${y}px)`,
-        ],
-      },
-      {
-        duration: 420,
-        easing: 'ease-out',
-        pseudoElement: '::view-transition-new(root)',
-      },
-    ).finished
-  } finally {
-    root.classList.remove('vt-theme')
-  }
+  // Grow the *incoming* theme as a circle on top of the outgoing one. It fully
+  // covers the viewport before teardown, so the handoff is seamless — no flash.
+  document.documentElement.animate(
+    {
+      clipPath: [
+        `circle(0px at ${x}px ${y}px)`,
+        `circle(${endRadius}px at ${x}px ${y}px)`,
+      ],
+    },
+    {
+      duration: 420,
+      easing: 'ease-out',
+      pseudoElement: '::view-transition-new(root)',
+    },
+  )
 })
 </script>
