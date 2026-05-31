@@ -57,17 +57,34 @@
 }
 
 /* ── Day ⇄ night circular-reveal transition ─────────────────────────
-   No default cross-fade; the JS in Layout.vue grows the incoming theme as a
-   circle. The new layer always sits on top and fully covers the viewport
-   before teardown, so there's no end-of-transition flash. */
-::view-transition-old(root),
-::view-transition-new(root) {
+   Scoped to .vt-theme (added to <html> only during the appearance toggle):
+   the JS in Layout.vue grows the incoming theme as a circle, fully covering
+   the viewport before teardown so there's no end-of-transition flash.
+   Page-navigation transitions (no .vt-theme) keep the default crossfade. */
+.vt-theme::view-transition-old(root),
+.vt-theme::view-transition-new(root) {
   animation: none;
   mix-blend-mode: normal;
 }
-::view-transition-old(root) {
+.vt-theme::view-transition-old(root) {
   z-index: 1;
 }
-::view-transition-new(root) {
+.vt-theme::view-transition-new(root) {
   z-index: 2147483646;
+}
+
+/* ── Page-navigation entrance ────────────────────────────────────────
+   A gentle fade-up of the content each time the route changes (the class
+   is added in theme/index.ts via router.onAfterRouteChange). */
+@keyframes vpRouteEnter {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.VPContent.route-enter {
+  animation: vpRouteEnter 0.3s ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  .VPContent.route-enter {
+    animation: none;
+  }
 }

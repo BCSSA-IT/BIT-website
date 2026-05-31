@@ -1,4 +1,6 @@
 <template>
+  <!-- Decorative drifting tetrahedra behind every non-home page -->
+  <BgTetrahedra v-if="!frontmatter.bit3d" />
   <DefaultTheme.Layout>
     <template v-if="frontmatter.bit3d" #home-hero-before>
       <BitHome />
@@ -17,6 +19,7 @@ import DefaultTheme from 'vitepress/theme'
 import { useData } from 'vitepress'
 import { provide, nextTick } from 'vue'
 import BitHome from './components/BitHome.vue'
+import BgTetrahedra from './components/BgTetrahedra.vue'
 import SiteFooter from './components/SiteFooter.vue'
 
 const { frontmatter, isDark } = useData()
@@ -40,26 +43,35 @@ provide('toggle-appearance', async ({ clientX: x, clientY: y }: MouseEvent) => {
     Math.max(y, innerHeight - y),
   )
 
-  await (document as any).startViewTransition(async () => {
+  // Mark the root so the theme-toggle CSS (custom clip, no default fade) applies.
+  // Page-navigation transitions keep the default crossfade.
+  const root = document.documentElement
+  root.classList.add('vt-theme')
+
+  const transition = (document as any).startViewTransition(async () => {
     isDark.value = !isDark.value
     await nextTick()
-  }).ready
+  })
 
-  // Always grow the *incoming* theme as a circle on top of the outgoing one.
-  // It fully covers the viewport before the snapshot is removed, so the handoff
-  // to the live DOM is seamless — no end-of-transition flash.
-  document.documentElement.animate(
-    {
-      clipPath: [
-        `circle(0px at ${x}px ${y}px)`,
-        `circle(${endRadius}px at ${x}px ${y}px)`,
-      ],
-    },
-    {
-      duration: 420,
-      easing: 'ease-out',
-      pseudoElement: '::view-transition-new(root)',
-    },
-  )
+  try {
+    await transition.ready
+    // Grow the *incoming* theme as a circle on top of the outgoing one. It fully
+    // covers the viewport before teardown, so the handoff is seamless — no flash.
+    await root.animate(
+      {
+        clipPath: [
+          `circle(0px at ${x}px ${y}px)`,
+          `circle(${endRadius}px at ${x}px ${y}px)`,
+        ],
+      },
+      {
+        duration: 420,
+        easing: 'ease-out',
+        pseudoElement: '::view-transition-new(root)',
+      },
+    ).finished
+  } finally {
+    root.classList.remove('vt-theme')
+  }
 })
 </script>
