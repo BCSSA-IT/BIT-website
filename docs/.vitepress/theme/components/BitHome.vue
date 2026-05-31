@@ -20,12 +20,20 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, watch, onMounted, onUnmounted } from 'vue'
+import { useData } from 'vitepress'
 import * as THREE from 'three'
 import { LineSegments2 } from 'three/addons/lines/LineSegments2.js'
 import { LineSegmentsGeometry } from 'three/addons/lines/LineSegmentsGeometry.js'
 import { LineMaterial } from 'three/addons/lines/LineMaterial.js'
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js'
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js'
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js'
 import SiteFooter from './SiteFooter.vue'
+
+// Dark-mode bloom: tetrahedra get a faint fluorescent glow only at night.
+const { isDark } = useData()
 
 const container = ref<HTMLDivElement>()
 const canvas = ref<HTMLCanvasElement>()
@@ -42,6 +50,10 @@ let mat: LineMaterial
 let bgMat: LineMaterial
 let rafId: number
 let t = 0
+
+let composer: EffectComposer
+let bloomPass: UnrealBloomPass
+let bloomEnabled = false
 
 const PALETTE = [0x1E6FD9, 0x2563EB, 0x3B82F6, 0x6366F1, 0x8B5CF6, 0x0EA5E9]
 
@@ -90,6 +102,11 @@ let scrollProgress4 = 0   // tower:     scatter2 → Sather Tower
 let scrollProgress5 = 0   // scatter3:  tower   → explode
 let scrollProgress6 = 0   // fiatLux:   scatter3 → FIAT LUX
 
+// Smoothed scroll: onScroll records the target, render() eases toward it.
+let targetScrollPct = 0
+let smoothScrollPct = 0
+let lastTime = 0
+
 const raycaster = new THREE.Raycaster()
 const mousePlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0)
 const mouseWorld3D = new THREE.Vector3()
@@ -105,36 +122,41 @@ function onMouseMove(e: MouseEvent) {
 }
 
 function onScroll() {
-  const pct = window.scrollY / window.innerHeight
-  scrollProgress  = Math.max(0, Math.min(1, (pct - 0.30) / 1.20))  // 30%  → 150%
-  scrollProgress2 = Math.max(0, Math.min(1, (pct - 1.90) / 1.60))  // 190% → 350%
-  scrollProgress3 = Math.max(0, Math.min(1, (pct - 3.80) / 1.20))  // 380% → 500%
-  scrollProgress4 = Math.max(0, Math.min(1, (pct - 5.40) / 1.60))  // 540% → 700%
-  scrollProgress5 = Math.max(0, Math.min(1, (pct - 7.40) / 1.20))  // 740% → 860%
-  scrollProgress6 = Math.max(0, Math.min(1, (pct - 9.00) / 1.60))  // 900% → 1060%
+  // Only record the *target*; render() eases toward it for buttery motion.
+  targetScrollPct = window.scrollY / window.innerHeight
+}
+
+const easeInOut = (x: number) => x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2
+
+/** Map a (smoothed) scroll percentage to every phase progress + DOM overlay. */
+function applyProgress(pct: number) {
+  const clamp = (x: number) => Math.max(0, Math.min(1, x))
+  scrollProgress  = clamp((pct - 0.30) / 1.20)  // 30%  → 150%
+  scrollProgress2 = clamp((pct - 1.90) / 1.60)  // 190% → 350%
+  scrollProgress3 = clamp((pct - 3.80) / 1.20)  // 380% → 500%
+  scrollProgress4 = clamp((pct - 5.40) / 1.60)  // 540% → 700%
+  scrollProgress5 = clamp((pct - 7.40) / 1.20)  // 740% → 860%
+  scrollProgress6 = clamp((pct - 9.00) / 1.60)  // 900% → 1060%
 
   if (docLabel.value) {
     docLabel.value.style.opacity = String(Math.max(0, 0.5 - scrollProgress * 1.5))
   }
   if (bulbCopy.value) {
-    const t = scrollProgress2
-    const eased = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2
+    const eased = easeInOut(scrollProgress2)
     const fadeOut = Math.max(0, 1 - scrollProgress3 * 3)
     bulbCopy.value.style.opacity = String(eased * fadeOut)
     bulbCopy.value.style.transform = `translateY(${(1 - eased) * 24}px)`
   }
-  if (fiatLuxSub.value) {
-    const t6 = scrollProgress6
-    const e6 = t6 < 0.5 ? 4*t6*t6*t6 : 1 - Math.pow(-2*t6+2, 3)/2
-    fiatLuxSub.value.style.opacity = String(e6)
-    fiatLuxSub.value.style.transform = `translateX(-50%) translateY(${(1-e6)*20}px)`
-  }
   if (towerCopy.value) {
-    const t4 = scrollProgress4
-    const eased4 = t4 < 0.5 ? 4 * t4 * t4 * t4 : 1 - Math.pow(-2 * t4 + 2, 3) / 2
+    const eased4 = easeInOut(scrollProgress4)
     const fadeOut5 = Math.max(0, 1 - scrollProgress5 * 3)
     towerCopy.value.style.opacity = String(eased4 * fadeOut5)
     towerCopy.value.style.transform = `translateY(${(1 - eased4) * 24}px)`
+  }
+  if (fiatLuxSub.value) {
+    const e6 = easeInOut(scrollProgress6)
+    fiatLuxSub.value.style.opacity = String(e6)
+    fiatLuxSub.value.style.transform = `translateX(-50%) translateY(${(1 - e6) * 20}px)`
   }
   if (footerEl.value) {
     const fadeIn = Math.max(0, Math.min(1, (scrollProgress6 - 0.80) / 0.20))
@@ -545,10 +567,19 @@ function init() {
   renderer = new THREE.WebGLRenderer({ canvas: canvas.value!, antialias: true, alpha: true })
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
   renderer.setSize(w, h)
+  renderer.setClearColor(0x000000, 0)
 
   scene = new THREE.Scene()
   camera = new THREE.PerspectiveCamera(45, w / h, 0.1, 100)
   camera.position.z = 9
+
+  // Post-processing chain for the dark-mode glow (subtle bloom).
+  composer = new EffectComposer(renderer)
+  composer.addPass(new RenderPass(scene, camera))
+  // strength, radius, threshold — kept gentle for a faint glow, not a neon sign
+  bloomPass = new UnrealBloomPass(new THREE.Vector2(w, h), 0.38, 0.45, 0.0)
+  composer.addPass(bloomPass)
+  composer.addPass(new OutputPass())
 
   const res = new THREE.Vector2(w, h)
   mat   = new LineMaterial({ vertexColors: true, linewidth: 3, resolution: res, transparent: false, opacity: 1 })
@@ -691,7 +722,21 @@ function init() {
 
 function render() {
   rafId = requestAnimationFrame(render)
-  t += 0.005
+
+  // Frame time (seconds), clamped so a backgrounded tab doesn't lurch on return.
+  const now = performance.now()
+  let dt = (now - lastTime) / 1000
+  lastTime = now
+  if (dt > 0.1) dt = 0.1
+  const f = dt * 60   // normalise per-frame increments to a 60fps baseline
+
+  // Silky scroll: ease the smoothed value toward the real scroll position.
+  // Exponential smoothing is frame-rate independent (driven by a time constant).
+  const SMOOTH_TAU = 0.12
+  smoothScrollPct += (targetScrollPct - smoothScrollPct) * (1 - Math.exp(-dt / SMOOTH_TAU))
+  applyProgress(smoothScrollPct)
+
+  t += 0.005 * f
 
   // Mouse world position on z=0 plane for repulsion
   raycaster.setFromCamera(new THREE.Vector2(mouseNx, -mouseNy), camera)
@@ -717,9 +762,17 @@ function render() {
               :            1   - sp  * 0.65
   mat.transparent = true
 
+  // Eased phase progresses (cubic in-out → zero velocity at phase edges = smooth)
+  const spE  = easeInOut(sp)
+  const sp2E = easeInOut(sp2)
+  const sp3E = easeInOut(sp3)
+  const sp4E = easeInOut(sp4)
+  const sp5E = easeInOut(sp5)
+  const sp6E = easeInOut(sp6)
+
   // Foreground — neighbour-graph walk in local space
   fgTets.forEach(tet => {
-    tet.pos.lerp(tet.target, tet.lerpSpeed)
+    tet.pos.lerp(tet.target, Math.min(1, tet.lerpSpeed * f))
 
     // Repulsion
     const mouseLocal = letterMeshGroups[tet.groupIdx].worldToLocal(mouseWorld3D.clone())
@@ -727,19 +780,11 @@ function render() {
     const dy = tet.pos.y - mouseLocal.y
     const dist2D = Math.sqrt(dx * dx + dy * dy)
     if (dist2D < REPULSE_RADIUS && dist2D > 0.001) {
-      const force = (1 - dist2D / REPULSE_RADIUS) * REPULSE_STRENGTH
+      const force = (1 - dist2D / REPULSE_RADIUS) * REPULSE_STRENGTH * f
       tet.repulse.x += (dx / dist2D) * force
       tet.repulse.y += (dy / dist2D) * force
     }
-    tet.repulse.multiplyScalar(REPULSE_DECAY)
-
-    // Ease curves (cubic in-out for scatter/formation phases)
-    const eio = (x: number) => x < 0.5 ? 4*x*x*x : 1 - Math.pow(-2*x+2, 3)/2
-    const spE  = eio(sp)
-    const sp3E = eio(sp3)
-    const sp4E = eio(sp4)
-    const sp5E = eio(sp5)
-    const sp6E = eio(sp6)
+    tet.repulse.multiplyScalar(Math.pow(REPULSE_DECAY, f))
 
     const bx = tet.pos.x + tet.repulse.x
     const by = tet.pos.y + tet.repulse.y
@@ -751,9 +796,9 @@ function render() {
     const sz = bz + (tet.scatterTarget.z - bz) * spE
 
     // Phase 2 — bulb
-    const buldX = sx + (tet.bulbTarget.x - sx) * sp2
-    const buldY = sy + (tet.bulbTarget.y - sy) * sp2
-    const buldZ = sz + (tet.bulbTarget.z - sz) * sp2
+    const buldX = sx + (tet.bulbTarget.x - sx) * sp2E
+    const buldY = sy + (tet.bulbTarget.y - sy) * sp2E
+    const buldZ = sz + (tet.bulbTarget.z - sz) * sp2E
 
     // Phase 3 — scatter from bulb
     const s2x = buldX + (tet.scatter2Target.x - buldX) * sp3E
@@ -783,15 +828,15 @@ function render() {
       tet.targetIdx = idx
     }
 
-    tet.mesh.rotation.x += tet.rotSpeed.x
-    tet.mesh.rotation.y += tet.rotSpeed.y
-    tet.mesh.rotation.z += tet.rotSpeed.z
+    tet.mesh.rotation.x += tet.rotSpeed.x * f
+    tet.mesh.rotation.y += tet.rotSpeed.y * f
+    tet.mesh.rotation.z += tet.rotSpeed.z * f
   })
 
   // Mouse rotation: suppressed during phases 1-5, gradually restored as FIAT LUX forms
   const suppressBase = Math.max(sp, sp2, sp3, sp4, sp5)
   const rotSuppression = suppressBase * (sp6 > 0 ? 1 - sp6 : 1)
-  const rotEase = 0.06 * (1 - rotSuppression * 0.9)
+  const rotEase = 0.06 * (1 - rotSuppression * 0.9) * f
   currentRotY += (targetRotY - currentRotY) * rotEase
   currentRotX += (targetRotX - currentRotX) * rotEase
   letterMeshGroups.forEach(g => {
@@ -805,12 +850,14 @@ function render() {
     mesh.position.x = base.x + Math.sin(t * speed + phase.x) * bgAmp
     mesh.position.y = base.y + Math.cos(t * speed * 0.8 + phase.y) * bgAmp
     mesh.position.z = base.z + Math.sin(t * speed * 0.5 + phase.z) * bgAmp * 0.4
-    mesh.rotation.x += rotSpeed.x
-    mesh.rotation.y += rotSpeed.y
-    mesh.rotation.z += rotSpeed.z
+    mesh.rotation.x += rotSpeed.x * f
+    mesh.rotation.y += rotSpeed.y * f
+    mesh.rotation.z += rotSpeed.z * f
   })
 
-  renderer.render(scene, camera)
+  // Dark mode → bloom composer (glow); light mode → plain render (clean lines).
+  if (bloomEnabled) composer.render()
+  else renderer.render(scene, camera)
 }
 
 function onResize() {
@@ -819,13 +866,22 @@ function onResize() {
   camera.aspect = w / h
   camera.updateProjectionMatrix()
   renderer.setSize(w, h)
+  composer?.setSize(w, h)
+  bloomPass?.setSize(w, h)
   mat.resolution.set(w, h)
   bgMat.resolution.set(w, h)
 }
 
+// Toggle the glow with the site theme.
+watch(isDark, v => { bloomEnabled = v }, { immediate: true })
+
 onMounted(() => {
   // Give the page scroll room to trigger the scatter animation
   document.body.style.minHeight = '1150vh'
+  // Seed smoothing from the current scroll so a mid-page refresh doesn't sweep.
+  targetScrollPct = smoothScrollPct = window.scrollY / window.innerHeight
+  lastTime = performance.now()
+  applyProgress(smoothScrollPct)
   init()
   window.addEventListener('resize', onResize)
   window.addEventListener('mousemove', onMouseMove)
@@ -838,6 +894,7 @@ onUnmounted(() => {
   window.removeEventListener('resize', onResize)
   window.removeEventListener('mousemove', onMouseMove)
   window.removeEventListener('scroll', onScroll)
+  composer?.dispose()
   renderer?.dispose()
 })
 </script>
