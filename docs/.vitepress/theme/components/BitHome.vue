@@ -56,6 +56,24 @@ let bloomPass: UnrealBloomPass
 
 const PALETTE = [0x1E6FD9, 0x2563EB, 0x3B82F6, 0x6366F1, 0x8B5CF6, 0x0EA5E9]
 
+const FOV = 45
+
+// 手机竖屏走「竖向堆叠」布局：加载时一次性判断（与 custom.css 的 767px 断点一致）。
+// 真机加载即正确；桌面浏览器跨断点切换需刷新（已与用户确认，避免重建场景）。
+const MOBILE_MQ = '(max-width: 767px)'
+let isMobile = false
+
+/** 反算「刚好装下目标包围盒（FIT_WIDTH × FIT_HEIGHT）」所需的相机 z 距离（取宽/高较大值）。
+ *  桌面：宽 13（"BCSSA IT" 约 11 + 留白）、高 8（Sather 塔约 7 + 留白）。
+ *  手机：宽 8（最宽元素 ≈ "FIAT LUX" + 留白）、高 11（放大可视高度，把 3D 形态压到上半部，
+ *        下半部留给居中文案）。 */
+function fitCameraZ(aspect: number) {
+  const fitW = isMobile ? 8 : 13
+  const fitH = isMobile ? 11 : 8
+  const halfV = Math.tan((FOV * Math.PI) / 180 / 2)
+  return Math.max(fitH / 2 / halfV, fitW / 2 / (halfV * aspect))
+}
+
 let letterGroups: THREE.Vector3[][] = []
 let neighbours:   number[][][]      = []
 let centroids:    THREE.Vector3[]   = []
@@ -172,7 +190,7 @@ function buildLetterData() {
   ctx.font = 'bold 140px Arial, sans-serif'
   ctx.textBaseline = 'middle'
 
-  const TEXT   = 'BCSSA IT'
+  const TEXT   = isMobile ? 'BIT' : 'BCSSA IT'
   const totalW = ctx.measureText(TEXT).width
   const drawX  = (W - totalW) / 2
 
@@ -421,8 +439,9 @@ function buildTowerTargets(count: number): THREE.Vector3[] {
     for (let x = 0; x < W; x += STEP) {
       if (px[(y * W + x) * 4 + 3] > 64) {
         pts.push(new THREE.Vector3(
-          (x / W - 0.5) * 3.8 - 2.8,
-          -(y / H - 0.5) * 7.0,
+          // 手机：居中、压扁上移（塔很高，缩短以给下方文案留白）
+          (x / W - 0.5) * (isMobile ? 3.0 : 3.8) + (isMobile ? 0 : -2.8),
+          -(y / H - 0.5) * (isMobile ? 5.2 : 7.0) + (isMobile ? 1.2 : 0),
           -0.5,
         ))
       }
@@ -507,8 +526,9 @@ function buildBulbTargets(count: number): THREE.Vector3[] {
     for (let x = 0; x < W; x += 2) {
       if (px[(y * W + x) * 4 + 3] > 64) {
         pts.push(new THREE.Vector3(
-          (x / W - 0.5) * 5.2 + 3.4,     // right side of scene
-          -(y / H - 0.5) * 6.5 + 0.4,    // vertically centred, slight upward bias
+          // 手机：居中、上移到上半部；桌面：偏右
+          (x / W - 0.5) * (isMobile ? 4.0 : 5.2) + (isMobile ? 0 : 3.4),
+          -(y / H - 0.5) * (isMobile ? 5.0 : 6.5) + (isMobile ? 2.0 : 0.4),
           -0.3,
         ))
       }
@@ -545,8 +565,9 @@ function buildFiatLuxTargets(count: number): THREE.Vector3[] {
     for (let x = 0; x < W; x += STEP) {
       if (px[(y * W + x) * 4 + 3] > 128) {
         pts.push(new THREE.Vector3(
-          (x / W - 0.5) * 16,
-          -(y / H - 0.5) * 5 + 1.5,
+          // 手机：缩窄（"FIAT LUX" 较宽）、略上移
+          (x / W - 0.5) * (isMobile ? 9 : 16),
+          -(y / H - 0.5) * 5 + (isMobile ? 2.2 : 1.5),
           0,
         ))
       }
@@ -569,8 +590,8 @@ function init() {
   renderer.setClearColor(0x000000, 0)
 
   scene = new THREE.Scene()
-  camera = new THREE.PerspectiveCamera(45, w / h, 0.1, 100)
-  camera.position.z = 9
+  camera = new THREE.PerspectiveCamera(FOV, w / h, 0.1, 100)
+  camera.position.z = fitCameraZ(w / h)
 
   // Post-processing chain for the dark-mode glow (subtle bloom).
   composer = new EffectComposer(renderer)
@@ -865,6 +886,7 @@ function onResize() {
   const w = container.value!.clientWidth
   const h = container.value!.clientHeight
   camera.aspect = w / h
+  camera.position.z = fitCameraZ(w / h)   // 窄屏后拉以装下完整形态
   camera.updateProjectionMatrix()
   renderer.setSize(w, h)
   composer?.setSize(w, h)
@@ -874,6 +896,8 @@ function onResize() {
 }
 
 onMounted(() => {
+  // 加载时判断手机/桌面（一次性，与 custom.css 的 767px 断点一致）
+  isMobile = window.matchMedia(MOBILE_MQ).matches
   // Give the page scroll room to trigger the scatter animation
   document.body.style.minHeight = '1150vh'
   // Seed smoothing from the current scroll so a mid-page refresh doesn't sweep.
@@ -1044,5 +1068,38 @@ canvas {
   pointer-events: none;
   will-change: opacity;
   z-index: 10;
+}
+
+/* ── 手机竖屏：竖向堆叠（3D 图形在上半部、文案移到下半部整行居中） ──
+   断点与 JS 的 isMobile / custom.css 保持一致（767px）。3D 形态的居中与上移由
+   脚本里的 isMobile 坐标分支完成；这里只负责把 DOM 文案改成下半部整行居中。 */
+@media (max-width: 767px) {
+  .bulb-copy,
+  .tower-copy {
+    left: 0;
+    right: 0;
+    top: auto;
+    bottom: 10%;
+    transform: none;        /* 水平居中改由 text-align 负责；JS 仍设 translateY 做入场 */
+    text-align: center;     /* 覆盖 .tower-copy 的 right 对齐 */
+    padding: 0 6%;
+  }
+
+  /* 标语字号缩小，避免在窄屏过大换行 */
+  .bulb-copy__headline,
+  .tower-copy__headline {
+    font-size: clamp(2.2rem, 9vw, 3.2rem);
+    margin-bottom: 1.2rem;
+  }
+
+  .bulb-copy__tag,
+  .tower-copy__tag {
+    margin-bottom: 1rem;
+  }
+
+  /* "Documentation" 略微上提，更贴近上方的 BIT */
+  .doc-label {
+    bottom: 34%;
+  }
 }
 </style>
