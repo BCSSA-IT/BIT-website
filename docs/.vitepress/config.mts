@@ -9,6 +9,7 @@ export default defineConfig({
   themeConfig: {
     nav: [
       { text: '主页', link: '/' },
+      { text: '快速参考', link: '/reference' },
       {
         text: '摄影摄像',
         items: [
