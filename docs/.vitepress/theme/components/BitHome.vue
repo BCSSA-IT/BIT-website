@@ -1,27 +1,135 @@
 <template>
   <div ref="container" class="bit-home">
-    <div ref="docLabel" class="doc-label">Documentation</div>
-    <div ref="bulbCopy" class="bulb-copy">
-      <span class="bulb-copy__tag">BCSSA · IT DEPT.</span>
-      <h2 class="bulb-copy__headline">让知识<br>有迹可循</h2>
-      <p class="bulb-copy__body">工作流程&nbsp;&nbsp;·&nbsp;&nbsp;技术教程&nbsp;&nbsp;·&nbsp;&nbsp;经验沉淀</p>
+    <!-- ── 固定舞台：3D canvas + 叙事文案覆盖层（纯装饰，pointer-events:none） ── -->
+    <div ref="stage" class="bit-home__stage">
+      <canvas ref="canvas" />
+
+      <div ref="docLabel" class="doc-label">BCSSA · 信息技术部</div>
+
+      <!-- 四大职能：每个形态对应一段招募文案，桌面左右交替 -->
+      <div ref="cameraCopy" class="phase-copy phase-copy--right">
+        <span class="phase-copy__tag">PHOTO · VIDEO</span>
+        <h2 class="phase-copy__headline"><span>记录每一个</span><span>高光时刻</span></h2>
+        <p class="phase-copy__body">活动摄影&nbsp;&nbsp;·&nbsp;&nbsp;视频拍摄&nbsp;&nbsp;·&nbsp;&nbsp;直播导播</p>
+      </div>
+
+      <div ref="designCopy" class="phase-copy phase-copy--left">
+        <span class="phase-copy__tag">DESIGN</span>
+        <h2 class="phase-copy__headline"><span>用设计</span><span>传递信息</span></h2>
+        <p class="phase-copy__body">海报&nbsp;&nbsp;·&nbsp;&nbsp;视觉物料&nbsp;&nbsp;·&nbsp;&nbsp;品牌视觉</p>
+      </div>
+
+      <div ref="codeCopy" class="phase-copy phase-copy--right">
+        <span class="phase-copy__tag">DEV</span>
+        <h2 class="phase-copy__headline"><span>搭建数字</span><span>基础设施</span></h2>
+        <p class="phase-copy__body">网站开发&nbsp;&nbsp;·&nbsp;&nbsp;系统维护&nbsp;&nbsp;·&nbsp;&nbsp;自动化</p>
+      </div>
+
+      <div ref="liveCopy" class="phase-copy phase-copy--left">
+        <span class="phase-copy__tag">LIVE</span>
+        <h2 class="phase-copy__headline"><span>让现场</span><span>传得更远</span></h2>
+        <p class="phase-copy__body">活动直播&nbsp;&nbsp;·&nbsp;&nbsp;导播&nbsp;&nbsp;·&nbsp;&nbsp;技术支持</p>
+      </div>
+
+      <div ref="fiatLuxSub" class="fiat-lux-sub">要有光</div>
     </div>
-    <div ref="towerCopy" class="tower-copy">
-      <span class="tower-copy__tag">UC BERKELEY · BCSSA</span>
-      <h2 class="tower-copy__headline">社团背后<br>的技术力量</h2>
-      <p class="tower-copy__body">系统搭建&nbsp;&nbsp;·&nbsp;&nbsp;技术支持&nbsp;&nbsp;·&nbsp;&nbsp;数字化运营</p>
-    </div>
-    <div ref="fiatLuxSub" class="fiat-lux-sub">要有光</div>
-    <div ref="footerEl" class="bit-home-footer">
+
+    <!-- 占位：给固定舞台撑出滚动行程（取代 body.minHeight） -->
+    <div class="bit-home__spacer" :style="{ height: STORY_VH + 'vh' }" />
+
+    <!-- ── 常规流内容区：招新宣传 ── -->
+    <div ref="content" class="bit-home__content">
+      <section class="home-sec home-intro">
+        <p class="home-intro__eyebrow">BCSSA · INFORMATION TECHNOLOGY</p>
+        <h2 class="home-intro__title">我们是 BCSSA 信息技术部</h2>
+        <p class="home-intro__lead">
+          用镜头、设计、代码与直播，把社团的每一次活动<strong>记录好、呈现好、传播好</strong>。
+          这里既是我们的工作流文档，也是我们做过什么的橱窗。
+        </p>
+      </section>
+
+      <section class="home-sec">
+        <h3 class="home-sec__title">我们做什么</h3>
+        <div class="home-cards">
+          <div class="home-card">
+            <div class="home-card__icon">📷</div>
+            <div class="home-card__title">摄影摄像</div>
+            <p class="home-card__desc">活动摄影、视频拍摄与直播导播，记录每一个高光时刻。</p>
+            <div class="home-card__links">
+              <a :href="withBase('/photography/camera')">相机使用</a>
+              <a :href="withBase('/reference')">拍摄速查</a>
+            </div>
+          </div>
+
+          <div class="home-card">
+            <div class="home-card__icon">🎨</div>
+            <div class="home-card__title">海报设计</div>
+            <p class="home-card__desc">海报、视觉物料与品牌视觉，让信息既好看也好懂。</p>
+            <div class="home-card__links">
+              <a :href="withBase('/post/photo')">照片后期</a>
+            </div>
+          </div>
+
+          <div class="home-card">
+            <div class="home-card__icon">💻</div>
+            <div class="home-card__title">网站开发与维护</div>
+            <p class="home-card__desc">开发并维护部门的网站、工具与数字基础设施。</p>
+            <div class="home-card__links">
+              <a :href="withBase('/dev/projects')">计算机项目</a>
+              <a :href="withBase('/dev/setup')">环境搭建</a>
+            </div>
+          </div>
+
+          <div class="home-card">
+            <div class="home-card__icon">📡</div>
+            <div class="home-card__title">直播与活动技术</div>
+            <p class="home-card__desc">活动直播、导播与现场技术支持，让现场传得更远。</p>
+            <div class="home-card__links">
+              <a :href="withBase('/reference')">拍摄速查</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="home-sec">
+        <h3 class="home-sec__title">加入你能得到</h3>
+        <div class="home-reasons">
+          <div class="home-reason">
+            <div class="home-reason__num">01</div>
+            <div class="home-reason__title">学真技术</div>
+            <p class="home-reason__desc">从相机到剪辑、从设计到代码，系统地把一门手艺练到能用。</p>
+          </div>
+          <div class="home-reason">
+            <div class="home-reason__num">02</div>
+            <div class="home-reason__title">做真实项目</div>
+            <p class="home-reason__desc">真实活动、真实上线、真实观众，作品直接进作品集。</p>
+          </div>
+          <div class="home-reason">
+            <div class="home-reason__num">03</div>
+            <div class="home-reason__title">找到同好</div>
+            <p class="home-reason__desc">一群同样热爱影像与技术的人，一起把事情做漂亮。</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="join" class="home-sec home-cta">
+        <h2 class="home-cta__title">加入 BCSSA 信息技术部</h2>
+        <p class="home-cta__lead">
+          无论你想拿起相机、打磨设计、写代码还是做直播 —— 这里都有你的位置。
+        </p>
+        <!-- TODO: 把下方链接换成真实联系方式（招新表单 / 群号 / 邮箱） -->
+        <a class="home-cta__btn" href="#join">加入我们</a>
+        <p class="home-cta__note">联系方式即将更新</p>
+      </section>
+
       <SiteFooter />
     </div>
-    <canvas ref="canvas" />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
-import { useData } from 'vitepress'
+import { useData, withBase } from 'vitepress'
 import * as THREE from 'three'
 import { LineSegments2 } from 'three/addons/lines/LineSegments2.js'
 import { LineSegmentsGeometry } from 'three/addons/lines/LineSegmentsGeometry.js'
@@ -36,12 +144,15 @@ import SiteFooter from './SiteFooter.vue'
 const { isDark } = useData()
 
 const container = ref<HTMLDivElement>()
-const canvas = ref<HTMLCanvasElement>()
-const docLabel = ref<HTMLDivElement>()
-const bulbCopy = ref<HTMLDivElement>()
-const towerCopy = ref<HTMLDivElement>()
+const stage     = ref<HTMLDivElement>()
+const canvas    = ref<HTMLCanvasElement>()
+const content   = ref<HTMLDivElement>()
+const docLabel  = ref<HTMLDivElement>()
+const cameraCopy = ref<HTMLDivElement>()
+const designCopy = ref<HTMLDivElement>()
+const codeCopy   = ref<HTMLDivElement>()
+const liveCopy   = ref<HTMLDivElement>()
 const fiatLuxSub = ref<HTMLDivElement>()
-const footerEl = ref<HTMLDivElement>()
 
 let renderer: THREE.WebGLRenderer
 let scene: THREE.Scene
@@ -58,15 +169,14 @@ const PALETTE = [0x1E6FD9, 0x2563EB, 0x3B82F6, 0x6366F1, 0x8B5CF6, 0x0EA5E9]
 
 const FOV = 45
 
+// 占位高度（vh）：给固定舞台撑出整段叙事的滚动行程。
+const STORY_VH = 1950
+
 // 手机竖屏走「竖向堆叠」布局：加载时一次性判断（与 custom.css 的 767px 断点一致）。
-// 真机加载即正确；桌面浏览器跨断点切换需刷新（已与用户确认，避免重建场景）。
 const MOBILE_MQ = '(max-width: 767px)'
 let isMobile = false
 
-/** 反算「刚好装下目标包围盒（FIT_WIDTH × FIT_HEIGHT）」所需的相机 z 距离（取宽/高较大值）。
- *  桌面：宽 13（"BCSSA IT" 约 11 + 留白）、高 8（Sather 塔约 7 + 留白）。
- *  手机：宽 8（最宽元素 ≈ "FIAT LUX" + 留白）、高 11（放大可视高度，把 3D 形态压到上半部，
- *        下半部留给居中文案）。 */
+/** 反算「刚好装下目标包围盒」所需的相机 z 距离（取宽/高较大值）。 */
 function fitCameraZ(aspect: number) {
   const fitW = isMobile ? 8 : 13
   const fitH = isMobile ? 11 : 8
@@ -82,20 +192,16 @@ let centroids:    THREE.Vector3[]   = []
 const letterMeshGroups: THREE.Group[] = []
 
 interface FgTetData {
-  mesh:           LineSegments2
-  pos:            THREE.Vector3
-  target:         THREE.Vector3
-  repulse:        THREE.Vector3
-  scatterTarget:  THREE.Vector3   // phase 1 explosion target
-  bulbTarget:     THREE.Vector3   // phase 2 bulb formation target
-  scatter2Target: THREE.Vector3   // phase 3 explosion target (from bulb)
-  towerTarget:    THREE.Vector3   // phase 4 Sather Tower target
-  scatter3Target: THREE.Vector3   // phase 5 explosion target (from tower)
-  fiatLuxTarget:  THREE.Vector3   // phase 6 FIAT LUX formation target
-  targetIdx:      number
-  groupIdx:       number
-  lerpSpeed:      number
-  rotSpeed:       { x: number; y: number; z: number }
+  mesh:         LineSegments2
+  pos:          THREE.Vector3   // local neighbour-walk position (letters "home" state)
+  target:       THREE.Vector3   // current neighbour-walk target
+  repulse:      THREE.Vector3
+  // 相位目标序列（交替）：scatter₁, 形态₁, scatter₂, 形态₂, … —— 链式 lerp 折叠
+  phaseTargets: THREE.Vector3[]
+  targetIdx:    number
+  groupIdx:     number
+  lerpSpeed:    number
+  rotSpeed:     { x: number; y: number; z: number }
 }
 
 interface BgTetData {
@@ -109,15 +215,43 @@ interface BgTetData {
 const fgTets: FgTetData[] = []
 const bgTets: BgTetData[] = []
 
+// ── 叙事形态序列（letters 为初始 home 态，不在此列） ──────────────────
+// 顺序即滚动叙事顺序：相机 → 笔尖 → 浏览器</> → 直播 → FIAT LUX。
+const FORMATIONS: { name: string; build: (count: number) => THREE.Vector3[] }[] = [
+  { name: 'camera',  build: buildCameraTargets  },
+  { name: 'design',  build: buildDesignTargets  },
+  { name: 'code',    build: buildCodeTargets    },
+  { name: 'live',    build: buildLiveTargets    },
+  { name: 'fiatlux', build: buildFiatLuxTargets },
+]
+
+// ── 相位区间（按滚动百分比 pct = scrollY/innerHeight） ────────────────
+// 每个形态 = 一段 scatter（散开）+ 一段 reform（成形），交替排布，留少量停顿。
+const SCATTER_LEN = 1.2
+const REFORM_LEN  = 1.6
+const HOLD_AFTER_SCATTER = 0.4
+const HOLD_AFTER_REFORM  = 0.3
+const PHASES: { start: number; len: number }[] = (() => {
+  const out: { start: number; len: number }[] = []
+  let cur = 0.30
+  for (let i = 0; i < FORMATIONS.length; i++) {
+    out.push({ start: cur, len: SCATTER_LEN }); cur += SCATTER_LEN + HOLD_AFTER_SCATTER
+    out.push({ start: cur, len: REFORM_LEN  }); cur += REFORM_LEN  + HOLD_AFTER_REFORM
+  }
+  return out
+})()
+// reform 相位在 PHASES 中的下标：第 fi 个形态 → 1 + fi*2
+const reformIdx = (fi: number) => 1 + fi * 2
+const FIAT_IDX  = reformIdx(FORMATIONS.length - 1)   // 最后一个形态（FIAT LUX）的 reform 下标
+const CONTENT_START = PHASES[FIAT_IDX].start + PHASES[FIAT_IDX].len   // FIAT LUX 成形末尾
+const CONTENT_LEN   = 0.8
+
+const phaseProgress: number[] = new Array(PHASES.length).fill(0)
+let contentReveal = 0
+
 let targetRotY = 0, targetRotX = 0
 let currentRotY = 0, currentRotX = 0
 let mouseNx = 0, mouseNy = 0
-let scrollProgress  = 0   // scatter1:  letters → explode
-let scrollProgress2 = 0   // bulb:      scatter1 → bulb
-let scrollProgress3 = 0   // scatter2:  bulb    → explode
-let scrollProgress4 = 0   // tower:     scatter2 → Sather Tower
-let scrollProgress5 = 0   // scatter3:  tower   → explode
-let scrollProgress6 = 0   // fiatLux:   scatter3 → FIAT LUX
 
 // Smoothed scroll: onScroll records the target, render() eases toward it.
 let targetScrollPct = 0
@@ -129,7 +263,8 @@ const mousePlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0)
 const mouseWorld3D = new THREE.Vector3()
 
 function onMouseMove(e: MouseEvent) {
-  const rect = container.value!.getBoundingClientRect()
+  if (!stage.value) return
+  const rect = stage.value.getBoundingClientRect()
   const nx = ((e.clientX - rect.left) / rect.width) * 2 - 1
   const ny = ((e.clientY - rect.top) / rect.height) * 2 - 1
   targetRotY = nx * 0.45
@@ -139,46 +274,49 @@ function onMouseMove(e: MouseEvent) {
 }
 
 function onScroll() {
-  // Only record the *target*; render() eases toward it for buttery motion.
   targetScrollPct = window.scrollY / window.innerHeight
 }
 
 const easeInOut = (x: number) => x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2
 
+/** 让一段职能文案随其成形相位淡入、随下一段散开相位淡出（沿用原 bulb-copy 写法）。 */
+function driveServiceCopy(el: HTMLElement | undefined, ri: number) {
+  if (!el) return
+  const eased   = easeInOut(phaseProgress[ri])
+  const fadeOut = Math.max(0, 1 - phaseProgress[ri + 1] * 3)
+  el.style.opacity = String(eased * fadeOut)
+  el.style.transform = `translateY(${(1 - eased) * 24}px)`
+}
+
 /** Map a (smoothed) scroll percentage to every phase progress + DOM overlay. */
 function applyProgress(pct: number) {
   const clamp = (x: number) => Math.max(0, Math.min(1, x))
-  scrollProgress  = clamp((pct - 0.30) / 1.20)  // 30%  → 150%
-  scrollProgress2 = clamp((pct - 1.90) / 1.60)  // 190% → 350%
-  scrollProgress3 = clamp((pct - 3.80) / 1.20)  // 380% → 500%
-  scrollProgress4 = clamp((pct - 5.40) / 1.60)  // 540% → 700%
-  scrollProgress5 = clamp((pct - 7.40) / 1.20)  // 740% → 860%
-  scrollProgress6 = clamp((pct - 9.00) / 1.60)  // 900% → 1060%
+  for (let i = 0; i < PHASES.length; i++) {
+    phaseProgress[i] = clamp((pct - PHASES[i].start) / PHASES[i].len)
+  }
+  contentReveal = clamp((pct - CONTENT_START) / CONTENT_LEN)
 
+  // 开场标语：第一段散开时淡出
   if (docLabel.value) {
-    docLabel.value.style.opacity = String(Math.max(0, 0.5 - scrollProgress * 1.5))
+    docLabel.value.style.opacity = String(Math.max(0, 0.5 - phaseProgress[0] * 1.5))
   }
-  if (bulbCopy.value) {
-    const eased = easeInOut(scrollProgress2)
-    const fadeOut = Math.max(0, 1 - scrollProgress3 * 3)
-    bulbCopy.value.style.opacity = String(eased * fadeOut)
-    bulbCopy.value.style.transform = `translateY(${(1 - eased) * 24}px)`
-  }
-  if (towerCopy.value) {
-    const eased4 = easeInOut(scrollProgress4)
-    const fadeOut5 = Math.max(0, 1 - scrollProgress5 * 3)
-    towerCopy.value.style.opacity = String(eased4 * fadeOut5)
-    towerCopy.value.style.transform = `translateY(${(1 - eased4) * 24}px)`
-  }
+
+  // 四大职能文案（camera/design/code/live 的 reform 下标 1/3/5/7）
+  driveServiceCopy(cameraCopy.value, reformIdx(0))
+  driveServiceCopy(designCopy.value, reformIdx(1))
+  driveServiceCopy(codeCopy.value,   reformIdx(2))
+  driveServiceCopy(liveCopy.value,   reformIdx(3))
+
+  // FIAT LUX 副标题：随成形淡入，随内容区揭示淡出
   if (fiatLuxSub.value) {
-    const e6 = easeInOut(scrollProgress6)
-    fiatLuxSub.value.style.opacity = String(e6)
-    fiatLuxSub.value.style.transform = `translateX(-50%) translateY(${(1 - e6) * 20}px)`
+    const e = easeInOut(phaseProgress[FIAT_IDX])
+    fiatLuxSub.value.style.opacity = String(e * (1 - contentReveal))
+    fiatLuxSub.value.style.transform = `translateX(-50%) translateY(${(1 - e) * 20}px)`
   }
-  if (footerEl.value) {
-    const fadeIn = Math.max(0, Math.min(1, (scrollProgress6 - 0.80) / 0.20))
-    footerEl.value.style.opacity = String(fadeIn)
-    footerEl.value.style.pointerEvents = fadeIn > 0 ? 'auto' : 'none'
+
+  // 舞台随内容区揭示淡出（内容区在常规流，舞台淡到 0 后不再遮挡）
+  if (stage.value) {
+    stage.value.style.opacity = String(1 - contentReveal)
   }
 }
 
@@ -286,264 +424,134 @@ function makeLineSegGeo(basePositions: Float32Array): LineSegmentsGeometry {
   return geo
 }
 
-/** Rasterise Sather Tower (UC Berkeley Campanile) silhouette.
- *
- *  Proportions modelled on the CSS reference:
- *    spire needle → wide pyramid roof → narrow belfry (lantern) →
- *    clock section → long main shaft (widest above base) → stepped base
- */
-function buildTowerTargets(count: number): THREE.Vector3[] {
-  const W = 280, H = 800, cx = 140
-  const off = document.createElement('canvas')
-  off.width = W; off.height = H
-  const ctx = off.getContext('2d')!
-
-  ctx.strokeStyle = '#fff'
-  ctx.lineCap = 'round'
-  ctx.lineJoin = 'round'
-
-  // Half-widths (the SHAFT is wider than the belfry — Campanile's key proportion)
-  const sHW    = 26   // main shaft (long column — widest active section)
-  const roofHW = 26   // pyramid base (same width as shaft)
-  const capHW  = 30   // cap ledge below pyramid (overhang, slightly wider)
-  const bHW    = 22   // belfry / lantern (NARROWEST — sits inside the cap)
-  const clkHW  = 25   // clock section
-  const colHW  = 18   // collar between clock and shaft
-  const baseHW = 32   // base block
-  const s1HW   = 40   // step 1
-  const s2HW   = 48   // step 2
-
-  // Y positions — spire tip at top (y=small), steps at bottom (y=large)
-  const yTip   = 10
-  const ySpBase = 50   // spire needle → pyramid tip  (40px needle)
-  const yRBase  = 130  // pyramid → cap ledge         (80px pyramid)
-  const yCapBot = 148  // cap → belfry                (18px cap)
-  const yBelBot = 213  // belfry bottom               (65px belfry)
-  const yClkT   = 220  // clock section top
-  const yClkB   = 282  // clock section bottom        (62px clock)
-  const yColB   = 302  // collar → shaft              (20px collar)
-  const yShB    = 720  // shaft bottom                (418px shaft ≈ 52% canvas)
-  const yBcB    = 736  // base collar → base
-  const yBotB   = 768  // base block bottom
-  const yS1B    = 782  // step 1 bottom
-  const yS2B    = 794  // step 2 bottom
-
-  // ── Outer silhouette (one closed stroke) ──────────────────────
-  ctx.lineWidth = 7
-  ctx.beginPath()
-  ctx.moveTo(cx, yTip)
-
-  // ── Right side ↓ ──────────────────────────────────────────────
-  // Spire needle → pyramid right slope
-  ctx.lineTo(cx + 1,      ySpBase)
-  ctx.lineTo(cx + roofHW, yRBase)
-  // Cap ledge (wider than roof base — creates an overhang line)
-  ctx.lineTo(cx + capHW,  yRBase)
-  ctx.lineTo(cx + capHW,  yCapBot)
-  // Belfry: step IN (narrower than cap)
-  ctx.lineTo(cx + bHW,    yCapBot + 2)
-  ctx.lineTo(cx + bHW,    yBelBot)
-  // Clock section: step OUT (wider than belfry)
-  ctx.lineTo(cx + clkHW,  yClkT)
-  ctx.lineTo(cx + clkHW,  yClkB)
-  // Collar taper into shaft
-  ctx.lineTo(cx + colHW,  yClkB + 5)
-  ctx.lineTo(cx + sHW,    yColB)
-  // Long shaft
-  ctx.lineTo(cx + sHW,    yShB)
-  // Base flare + stepped plinth
-  ctx.lineTo(cx + baseHW, yBcB)
-  ctx.lineTo(cx + baseHW, yBotB)
-  ctx.lineTo(cx + s1HW,   yBotB)
-  ctx.lineTo(cx + s1HW,   yS1B)
-  ctx.lineTo(cx + s2HW,   yS1B)
-  ctx.lineTo(cx + s2HW,   yS2B)
-
-  // Bottom
-  ctx.lineTo(cx - s2HW,   yS2B)
-
-  // ── Left side ↑ (mirror) ──────────────────────────────────────
-  ctx.lineTo(cx - s2HW,   yS1B)
-  ctx.lineTo(cx - s1HW,   yS1B)
-  ctx.lineTo(cx - s1HW,   yBotB)
-  ctx.lineTo(cx - baseHW, yBotB)
-  ctx.lineTo(cx - baseHW, yBcB)
-  ctx.lineTo(cx - sHW,    yShB)
-  ctx.lineTo(cx - sHW,    yColB)
-  ctx.lineTo(cx - colHW,  yClkB + 5)
-  ctx.lineTo(cx - clkHW,  yClkB)
-  ctx.lineTo(cx - clkHW,  yClkT)
-  ctx.lineTo(cx - bHW,    yBelBot)
-  ctx.lineTo(cx - bHW,    yCapBot + 2)
-  ctx.lineTo(cx - capHW,  yCapBot)
-  ctx.lineTo(cx - capHW,  yRBase)
-  ctx.lineTo(cx - roofHW, yRBase)
-  ctx.lineTo(cx - 1,      ySpBase)
-  ctx.closePath()
-  ctx.stroke()
-
-  // ── Internal horizontal lines ─────────────────────────────────
-  ctx.lineWidth = 5
-  const hLines: [number, number, number][] = [
-    [cx - capHW,  cx + capHW,  yRBase],          // pyramid base / cap top
-    [cx - capHW,  cx + capHW,  yCapBot],          // cap bottom / belfry top
-    [cx - bHW,    cx + bHW,    yBelBot],          // belfry bottom
-    [cx - clkHW,  cx + clkHW,  yClkT],            // clock section top
-    [cx - colHW,  cx + colHW,  yColB - 6],        // shaft collar
-    [cx - baseHW, cx + baseHW, yBcB],             // base top
-    [cx - baseHW, cx + baseHW, yBotB - 20],       // base mid
-  ]
-  for (const [x1, x2, y] of hLines) {
-    ctx.beginPath(); ctx.moveTo(x1, y); ctx.lineTo(x2, y); ctx.stroke()
-  }
-
-  // ── Two arched belfry openings ─────────────────────────────────
-  // bHW=18 → 36px belfry; 2 arches of archHW=6 at cx±10 → 8px pillar, 2px walls
-  ctx.lineWidth = 5
-  const archHW     = 6
-  const archCenX   = [cx - 10, cx + 10]
-  const archChordY = yCapBot + 18   // base of semicircle (bottom chord of arch top)
-  const archBotY   = yBelBot - 10  // open bottom of arch
-
-  for (const ax of archCenX) {
-    ctx.beginPath()
-    ctx.moveTo(ax - archHW, archBotY)
-    ctx.lineTo(ax - archHW, archChordY)
-    ctx.arc(ax, archChordY, archHW, Math.PI, 0, true)  // true = curves upward
-    ctx.lineTo(ax + archHW, archBotY)
-    ctx.stroke()
-  }
-
-  // ── Three vertical pilaster lines on main shaft ────────────────
-  ctx.lineWidth = 3
-  for (const vx of [cx - 10, cx, cx + 10]) {
-    ctx.beginPath()
-    ctx.moveTo(vx, yColB + 20)
-    ctx.lineTo(vx, yShB - 20)
-    ctx.stroke()
-  }
-
-  // ── Clock face circle ──────────────────────────────────────────
-  ctx.lineWidth = 5
-  const clkCY = Math.round((yClkT + yClkB) / 2)
-  ctx.beginPath()
-  ctx.arc(cx, clkCY, 20, 0, Math.PI * 2)
-  ctx.stroke()
-
-  // ── Sample pixels ──────────────────────────────────────────────
-  const px = ctx.getImageData(0, 0, W, H).data
+/** 通用：把离屏 canvas 描出的白色像素采样成 count 个世界坐标点。
+ *  worldW = 世界宽度（高度按画布宽高比推算，保持图形不变形）；ox/oy = 世界偏移。 */
+function sampleCanvas(
+  off: HTMLCanvasElement, count: number, z: number,
+  worldW: number, ox: number, oy: number, step = 3, alpha = 64,
+): THREE.Vector3[] {
+  const W = off.width, H = off.height
+  const worldH = worldW * (H / W)
+  const px = off.getContext('2d')!.getImageData(0, 0, W, H).data
   const pts: THREE.Vector3[] = []
-  const STEP = 3
-
-  for (let y = 0; y < H; y += STEP) {
-    for (let x = 0; x < W; x += STEP) {
-      if (px[(y * W + x) * 4 + 3] > 64) {
+  for (let y = 0; y < H; y += step) {
+    for (let x = 0; x < W; x += step) {
+      if (px[(y * W + x) * 4 + 3] > alpha) {
         pts.push(new THREE.Vector3(
-          // 手机：居中、压扁上移（塔很高，缩短以给下方文案留白）
-          (x / W - 0.5) * (isMobile ? 3.0 : 3.8) + (isMobile ? 0 : -2.8),
-          -(y / H - 0.5) * (isMobile ? 5.2 : 7.0) + (isMobile ? 1.2 : 0),
-          -0.5,
+          (x / W - 0.5) * worldW + ox,
+          -(y / H - 0.5) * worldH + oy,
+          z,
         ))
       }
     }
   }
-
-  if (pts.length === 0) return Array.from({ length: count }, () => new THREE.Vector3(-2.8, 0, 0))
-  return Array.from({ length: count }, () =>
-    pts[Math.floor(Math.random() * pts.length)].clone()
-  )
+  if (pts.length === 0) return Array.from({ length: count }, () => new THREE.Vector3(ox, oy, z))
+  return Array.from({ length: count }, () => pts[Math.floor(Math.random() * pts.length)].clone())
 }
 
-/** Rasterise a light-bulb outline and return count world-space sample positions. */
-function buildBulbTargets(count: number): THREE.Vector3[] {
-  const W = 320, H = 460
-
-  const off = document.createElement('canvas')
-  off.width = W; off.height = H
-  const ctx = off.getContext('2d')!
-  ctx.strokeStyle = '#fff'
-  ctx.lineWidth = 5
-  ctx.lineCap = 'round'
-  ctx.lineJoin = 'round'
-
-  const cx  = W * 0.5
-  const r   = W * 0.36          // dome radius
-  const dcy = H * 0.30          // dome circle centre Y
-
-  // geometry helpers
-  const neckTopY  = dcy + r * 1.05
-  const neckTopHW = r * 0.40
-  const neckBotY  = neckTopY + r * 0.30
-  const neckBotHW = r * 0.33
-  const baseHW    = r * 0.44
-  const baseBotY  = neckBotY + r * 0.62
-
-  // ── Bulb outline ────────────────────────────────────────────
+function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
   ctx.beginPath()
-  ctx.arc(cx, dcy, r, Math.PI * 0.62, Math.PI * 2.38)
-  ctx.lineTo(cx + neckTopHW, neckTopY)
-  ctx.lineTo(cx + neckBotHW, neckBotY)
-  ctx.lineTo(cx + baseHW,    neckBotY)
-  ctx.lineTo(cx + baseHW,    baseBotY)
-  ctx.lineTo(cx - baseHW,    baseBotY)
-  ctx.lineTo(cx - baseHW,    neckBotY)
-  ctx.lineTo(cx - neckBotHW, neckBotY)
-  ctx.lineTo(cx - neckTopHW, neckTopY)
+  ctx.moveTo(x + r, y)
+  ctx.arcTo(x + w, y,     x + w, y + h, r)
+  ctx.arcTo(x + w, y + h, x,     y + h, r)
+  ctx.arcTo(x,     y + h, x,     y,     r)
+  ctx.arcTo(x,     y,     x + w, y,     r)
   ctx.closePath()
-  ctx.stroke()
+}
 
-  // ── Filament (Λ shape) ──────────────────────────────────────
-  const filHW  = r * 0.22
-  const filBot = dcy + r * 0.20
-  const filTop = dcy - r * 0.28
-  ctx.beginPath()
-  ctx.moveTo(cx - filHW, filTop)
-  ctx.lineTo(cx,         filBot)
-  ctx.lineTo(cx + filHW, filTop)
-  ctx.stroke()
+/** 📷 相机：机身 + 取景器凸起 + 镜头大圆 + 快门/闪光点 */
+function buildCameraTargets(count: number): THREE.Vector3[] {
+  const W = 360, H = 260
+  const off = document.createElement('canvas'); off.width = W; off.height = H
+  const ctx = off.getContext('2d')!
+  ctx.strokeStyle = '#fff'; ctx.lineCap = 'round'; ctx.lineJoin = 'round'
 
-  // lead wires from filament feet to neck
-  ctx.beginPath()
-  ctx.moveTo(cx - filHW, filTop)
-  ctx.lineTo(cx - filHW * 0.4, dcy + r * 0.65)
-  ctx.moveTo(cx + filHW, filTop)
-  ctx.lineTo(cx + filHW * 0.4, dcy + r * 0.65)
-  ctx.stroke()
+  ctx.lineWidth = 6
+  roundRect(ctx, 38, 78, 284, 150, 18); ctx.stroke()         // body
+  ctx.beginPath()                                            // viewfinder hump
+  ctx.moveTo(130, 78); ctx.lineTo(150, 52); ctx.lineTo(230, 52); ctx.lineTo(250, 78); ctx.stroke()
+  ctx.lineWidth = 6
+  ctx.beginPath(); ctx.arc(180, 156, 56, 0, Math.PI * 2); ctx.stroke()  // lens outer
+  ctx.lineWidth = 4
+  ctx.beginPath(); ctx.arc(180, 156, 34, 0, Math.PI * 2); ctx.stroke()  // lens inner
+  ctx.beginPath(); ctx.arc(180, 156, 14, 0, Math.PI * 2); ctx.stroke()  // lens core
+  ctx.lineWidth = 5
+  ctx.beginPath(); ctx.arc(286, 104, 7, 0, Math.PI * 2); ctx.stroke()   // shutter/flash dot
+  ctx.beginPath(); ctx.arc(70, 104, 5, 0, Math.PI * 2); ctx.stroke()    // small dot
 
-  // ── Base separator lines ────────────────────────────────────
-  const sep1 = neckBotY + (baseBotY - neckBotY) * 0.32
-  const sep2 = neckBotY + (baseBotY - neckBotY) * 0.65
-  ctx.beginPath()
-  ctx.moveTo(cx - baseHW, sep1); ctx.lineTo(cx + baseHW, sep1)
-  ctx.moveTo(cx - baseHW, sep2); ctx.lineTo(cx + baseHW, sep2)
-  ctx.stroke()
+  // 文案在右 → 形态偏左
+  return sampleCanvas(off, count, -0.3, isMobile ? 4.4 : 5.6, isMobile ? 0 : -3.2, isMobile ? 2.0 : 0.4)
+}
 
-  // ── Sample white pixels ─────────────────────────────────────
-  const px = ctx.getImageData(0, 0, W, H).data
-  const pts: THREE.Vector3[] = []
+/** ✒️ 笔尖：细长三角 + 中缝 + 透气孔（海报/视觉设计） */
+function buildDesignTargets(count: number): THREE.Vector3[] {
+  const W = 200, H = 320
+  const off = document.createElement('canvas'); off.width = W; off.height = H
+  const ctx = off.getContext('2d')!
+  ctx.strokeStyle = '#fff'; ctx.lineCap = 'round'; ctx.lineJoin = 'round'
 
-  for (let y = 0; y < H; y += 2) {
-    for (let x = 0; x < W; x += 2) {
-      if (px[(y * W + x) * 4 + 3] > 64) {
-        pts.push(new THREE.Vector3(
-          // 手机：居中、上移到上半部；桌面：偏右
-          (x / W - 0.5) * (isMobile ? 4.0 : 5.2) + (isMobile ? 0 : 3.4),
-          -(y / H - 0.5) * (isMobile ? 5.0 : 6.5) + (isMobile ? 2.0 : 0.4),
-          -0.3,
-        ))
-      }
-    }
+  ctx.lineWidth = 6
+  ctx.beginPath()                                            // nib outline
+  ctx.moveTo(62, 36)
+  ctx.lineTo(138, 36)
+  ctx.lineTo(120, 250)
+  ctx.lineTo(100, 296)
+  ctx.lineTo(80, 250)
+  ctx.closePath(); ctx.stroke()
+  ctx.lineWidth = 5
+  ctx.beginPath(); ctx.moveTo(100, 150); ctx.lineTo(100, 288); ctx.stroke()  // centre slit
+  ctx.beginPath(); ctx.arc(100, 120, 14, 0, Math.PI * 2); ctx.stroke()       // vent hole
+
+  // 文案在左 → 形态偏右
+  return sampleCanvas(off, count, -0.3, isMobile ? 2.5 : 2.9, isMobile ? 0 : 3.1, isMobile ? 1.6 : 0)
+}
+
+/** </> 浏览器窗口：外框 + 标题栏三点 + 代码尖括号（网站开发） */
+function buildCodeTargets(count: number): THREE.Vector3[] {
+  const W = 360, H = 260
+  const off = document.createElement('canvas'); off.width = W; off.height = H
+  const ctx = off.getContext('2d')!
+  ctx.strokeStyle = '#fff'; ctx.lineCap = 'round'; ctx.lineJoin = 'round'
+
+  ctx.lineWidth = 6
+  roundRect(ctx, 28, 38, 304, 186, 16); ctx.stroke()         // window frame
+  ctx.lineWidth = 4
+  ctx.beginPath(); ctx.moveTo(28, 80); ctx.lineTo(332, 80); ctx.stroke()    // title bar
+  for (const dx of [56, 82, 108]) { ctx.beginPath(); ctx.arc(dx, 59, 5, 0, Math.PI * 2); ctx.stroke() }
+  ctx.lineWidth = 6
+  ctx.beginPath(); ctx.moveTo(150, 110); ctx.lineTo(120, 152); ctx.lineTo(150, 194); ctx.stroke()  // <
+  ctx.beginPath(); ctx.moveTo(210, 104); ctx.lineTo(170, 200); ctx.stroke()                         // /
+  ctx.beginPath(); ctx.moveTo(230, 110); ctx.lineTo(260, 152); ctx.lineTo(230, 194); ctx.stroke()  // >
+
+  // 文案在右 → 形态偏左
+  return sampleCanvas(off, count, -0.3, isMobile ? 4.4 : 5.6, isMobile ? 0 : -3.2, isMobile ? 2.0 : 0.4)
+}
+
+/** ▶ 直播：屏幕 + 播放键 + REC 点 + 两侧信号波（直播/导播） */
+function buildLiveTargets(count: number): THREE.Vector3[] {
+  const W = 360, H = 260
+  const off = document.createElement('canvas'); off.width = W; off.height = H
+  const ctx = off.getContext('2d')!
+  ctx.strokeStyle = '#fff'; ctx.lineCap = 'round'; ctx.lineJoin = 'round'
+
+  ctx.lineWidth = 6
+  roundRect(ctx, 90, 64, 180, 132, 16); ctx.stroke()         // screen
+  ctx.beginPath()                                            // play triangle
+  ctx.moveTo(160, 100); ctx.lineTo(160, 160); ctx.lineTo(212, 130); ctx.closePath(); ctx.stroke()
+  ctx.lineWidth = 5
+  ctx.beginPath(); ctx.arc(244, 88, 7, 0, Math.PI * 2); ctx.stroke()   // REC dot
+  // 信号波：左右各两道弧，像广播信号向外扩散
+  ctx.lineWidth = 5
+  for (const r of [26, 46]) {
+    ctx.beginPath(); ctx.arc(90, 130, r, Math.PI * 0.72, Math.PI * 1.28); ctx.stroke()   // left
+    ctx.beginPath(); ctx.arc(270, 130, r, -Math.PI * 0.28, Math.PI * 0.28); ctx.stroke() // right
   }
 
-  if (pts.length === 0) return Array.from({ length: count }, () => new THREE.Vector3(3.5, 0, 0))
-
-  // Random sampling so every region of the bulb (dome + neck + base) is covered
-  return Array.from({ length: count }, () =>
-    pts[Math.floor(Math.random() * pts.length)].clone()
-  )
+  // 文案在左 → 形态偏右
+  return sampleCanvas(off, count, -0.3, isMobile ? 4.6 : 5.8, isMobile ? 0 : 3.0, isMobile ? 1.6 : 0)
 }
 
-/** Rasterise "FIAT LUX" — same style as the initial BCSSA IT formation. */
+/** Rasterise "FIAT LUX" — same style as the initial letters formation. */
 function buildFiatLuxTargets(count: number): THREE.Vector3[] {
   const W = 1000, H = 200, STEP = 6
   const off = document.createElement('canvas')
@@ -565,7 +573,6 @@ function buildFiatLuxTargets(count: number): THREE.Vector3[] {
     for (let x = 0; x < W; x += STEP) {
       if (px[(y * W + x) * 4 + 3] > 128) {
         pts.push(new THREE.Vector3(
-          // 手机：缩窄（"FIAT LUX" 较宽）、略上移
           (x / W - 0.5) * (isMobile ? 9 : 16),
           -(y / H - 0.5) * 5 + (isMobile ? 2.2 : 1.5),
           0,
@@ -580,9 +587,30 @@ function buildFiatLuxTargets(count: number): THREE.Vector3[] {
   )
 }
 
+/** 从字母 home 位置炸开（向外放大 + 朝相机方向抬升）。 */
+function scatterFromLetters(local: THREE.Vector3): THREE.Vector3 {
+  return new THREE.Vector3(
+    local.x * 4 + (Math.random() - 0.5) * 6,
+    local.y * 4 + (Math.random() - 0.5) * 6,
+    5 + Math.random() * 6,
+  )
+}
+
+/** 从某个形态位置沿径向外炸（再朝相机方向抬升）。 */
+function scatterFromFormation(p: THREE.Vector3): THREE.Vector3 {
+  const len = Math.hypot(p.x, p.y)
+  const dx = len > 0.01 ? p.x / len : (Math.random() * 2 - 1)
+  const dy = len > 0.01 ? p.y / len : (Math.random() * 2 - 1)
+  return new THREE.Vector3(
+    p.x + dx * 7 + (Math.random() - 0.5) * 5,
+    p.y + dy * 7 + (Math.random() - 0.5) * 5,
+    p.z + 5 + Math.random() * 6,
+  )
+}
+
 function init() {
-  const w = container.value!.clientWidth
-  const h = container.value!.clientHeight
+  const w = stage.value!.clientWidth
+  const h = stage.value!.clientHeight
 
   renderer = new THREE.WebGLRenderer({ canvas: canvas.value!, antialias: true, alpha: true })
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
@@ -596,7 +624,6 @@ function init() {
   // Post-processing chain for the dark-mode glow (subtle bloom).
   composer = new EffectComposer(renderer)
   composer.addPass(new RenderPass(scene, camera))
-  // strength, radius, threshold — kept gentle for a faint glow, not a neon sign
   bloomPass = new UnrealBloomPass(new THREE.Vector2(w, h), 0.38, 0.45, 0.0)
   composer.addPass(bloomPass)
   composer.addPass(new OutputPass())
@@ -620,7 +647,6 @@ function init() {
     letterMeshGroups.push(g)
 
     pool.forEach((worldPos, startIdx) => {
-      // Convert to local space
       const localStart = new THREE.Vector3(
         worldPos.x - c.x,
         worldPos.y - c.y,
@@ -639,16 +665,7 @@ function init() {
         pos: localStart.clone(),
         target,
         repulse: new THREE.Vector3(),
-        scatterTarget: new THREE.Vector3(
-          localStart.x * 4 + (Math.random() - 0.5) * 6,
-          localStart.y * 4 + (Math.random() - 0.5) * 6,
-          5 + Math.random() * 6,   // blast toward / past camera (camera at z=9)
-        ),
-        bulbTarget:     new THREE.Vector3(), // filled after all tets built
-        scatter2Target: new THREE.Vector3(), // filled after bulbTarget assigned
-        towerTarget:    new THREE.Vector3(), // filled after scatter2Target assigned
-        scatter3Target: new THREE.Vector3(), // filled after towerTarget assigned
-        fiatLuxTarget:  new THREE.Vector3(), // filled after scatter3Target assigned
+        phaseTargets: [],   // filled below, once all tets exist
         targetIdx: idx,
         groupIdx: gi,
         lerpSpeed: 0.004 + Math.random() * 0.005,
@@ -687,78 +704,57 @@ function init() {
     })
   }
 
-  // Bulb targets
-  const worldBulbPts = buildBulbTargets(fgTets.length)
+  // ── 为每个 tet 计算相位目标序列 ───────────────────────────────────
+  // 各形态的世界采样点 → 转成相对各自字母 centroid 的局部坐标
+  const formationLocals: THREE.Vector3[][] = FORMATIONS.map(f => {
+    const world = f.build(fgTets.length)
+    return fgTets.map((tet, i) => {
+      const c = centroids[tet.groupIdx]
+      const wp = world[i]
+      return new THREE.Vector3(wp.x - c.x, wp.y - c.y, wp.z)
+    })
+  })
+
   fgTets.forEach((tet, i) => {
-    const c = centroids[tet.groupIdx]
-    const wp = worldBulbPts[i]
-    tet.bulbTarget.set(wp.x - c.x, wp.y - c.y, wp.z)
-  })
-
-  // scatter2Target: explode radially outward from each tet's bulb position
-  fgTets.forEach(tet => {
-    const bl = tet.bulbTarget
-    const len = Math.sqrt(bl.x * bl.x + bl.y * bl.y)
-    const dx = len > 0.01 ? bl.x / len : (Math.random() * 2 - 1)
-    const dy = len > 0.01 ? bl.y / len : (Math.random() * 2 - 1)
-    tet.scatter2Target.set(
-      bl.x + dx * 7 + (Math.random() - 0.5) * 5,
-      bl.y + dy * 7 + (Math.random() - 0.5) * 5,
-      bl.z + 5 + Math.random() * 6,
-    )
-  })
-
-  // Tower targets
-  const worldTowerPts = buildTowerTargets(fgTets.length)
-  fgTets.forEach((tet, i) => {
-    const c = centroids[tet.groupIdx]
-    const wp = worldTowerPts[i]
-    tet.towerTarget.set(wp.x - c.x, wp.y - c.y, wp.z)
-  })
-
-  // scatter3Target: explode radially outward from each tet's tower position
-  fgTets.forEach(tet => {
-    const tl = tet.towerTarget
-    const len = Math.sqrt(tl.x * tl.x + tl.y * tl.y)
-    const dx = len > 0.01 ? tl.x / len : (Math.random() * 2 - 1)
-    const dy = len > 0.01 ? tl.y / len : (Math.random() * 2 - 1)
-    tet.scatter3Target.set(
-      tl.x + dx * 7 + (Math.random() - 0.5) * 5,
-      tl.y + dy * 7 + (Math.random() - 0.5) * 5,
-      tl.z + 5 + Math.random() * 6,
-    )
-  })
-
-  // FIAT LUX targets — same coordinate space as initial BCSSA IT letters
-  const worldFiatLuxPts = buildFiatLuxTargets(fgTets.length)
-  fgTets.forEach((tet, i) => {
-    const c = centroids[tet.groupIdx]
-    const wp = worldFiatLuxPts[i]
-    tet.fiatLuxTarget.set(wp.x - c.x, wp.y - c.y, wp.z)
+    const seq: THREE.Vector3[] = [scatterFromLetters(tet.pos)]   // phase 0: 从字母炸开
+    FORMATIONS.forEach((_, fi) => {
+      const local = formationLocals[fi][i]
+      seq.push(local.clone())                                    // reform → 形态
+      if (fi < FORMATIONS.length - 1) seq.push(scatterFromFormation(local))  // scatter（最后一个形态后无）
+    })
+    tet.phaseTargets = seq
   })
 
   render()
 }
 
+/** mat.opacity：成形时回满、散开时压暗（最新激活相位决定）。 */
+function matOpacityFor(): number {
+  for (let i = PHASES.length - 1; i >= 0; i--) {
+    const p = phaseProgress[i]
+    if (p > 0) {
+      if (i % 2 === 1) return (i === PHASES.length - 1 ? 0.35 + p * 0.65 : 0.35 + p * 0.6)  // reform
+      return (i === 0 ? 1 - p * 0.65 : 0.9 - p * 0.55)                                       // scatter
+    }
+  }
+  return 1
+}
+
 function render() {
   rafId = requestAnimationFrame(render)
 
-  // Frame time (seconds), clamped so a backgrounded tab doesn't lurch on return.
   const now = performance.now()
   let dt = (now - lastTime) / 1000
   lastTime = now
   if (dt > 0.1) dt = 0.1
-  const f = dt * 60   // normalise per-frame increments to a 60fps baseline
+  const f = dt * 60
 
-  // Silky scroll: ease the smoothed value toward the real scroll position.
-  // Exponential smoothing is frame-rate independent (driven by a time constant).
   const SMOOTH_TAU = 0.12
   smoothScrollPct += (targetScrollPct - smoothScrollPct) * (1 - Math.exp(-dt / SMOOTH_TAU))
   applyProgress(smoothScrollPct)
 
   t += 0.005 * f
 
-  // Mouse world position on z=0 plane for repulsion
   raycaster.setFromCamera(new THREE.Vector2(mouseNx, -mouseNy), camera)
   raycaster.ray.intersectPlane(mousePlane, mouseWorld3D)
 
@@ -766,35 +762,13 @@ function render() {
   const REPULSE_STRENGTH = 0.022
   const REPULSE_DECAY = 0.92
 
-  const sp  = scrollProgress
-  const sp2 = scrollProgress2
-  const sp3 = scrollProgress3
-  const sp4 = scrollProgress4
-  const sp5 = scrollProgress5
-  const sp6 = scrollProgress6
-
-  // Opacity across all phases
-  mat.opacity = sp6 > 0 ? 0.35 + sp6 * 0.65   // rebuild to full for FIAT LUX
-              : sp5 > 0 ? 0.85 - sp5 * 0.50
-              : sp4 > 0 ? 0.35 + sp4 * 0.50
-              : sp3 > 0 ? 0.90 - sp3 * 0.55
-              : sp2 > 0 ? 0.35 + sp2 * 0.55
-              :            1   - sp  * 0.65
+  mat.opacity = matOpacityFor()
   mat.transparent = true
 
-  // Eased phase progresses (cubic in-out → zero velocity at phase edges = smooth)
-  const spE  = easeInOut(sp)
-  const sp2E = easeInOut(sp2)
-  const sp3E = easeInOut(sp3)
-  const sp4E = easeInOut(sp4)
-  const sp5E = easeInOut(sp5)
-  const sp6E = easeInOut(sp6)
-
-  // Foreground — neighbour-graph walk in local space
+  // Foreground — neighbour-graph walk in local space + chained phase lerp
   fgTets.forEach(tet => {
     tet.pos.lerp(tet.target, Math.min(1, tet.lerpSpeed * f))
 
-    // Repulsion
     const mouseLocal = letterMeshGroups[tet.groupIdx].worldToLocal(mouseWorld3D.clone())
     const dx = tet.pos.x - mouseLocal.x
     const dy = tet.pos.y - mouseLocal.y
@@ -806,41 +780,19 @@ function render() {
     }
     tet.repulse.multiplyScalar(Math.pow(REPULSE_DECAY, f))
 
-    const bx = tet.pos.x + tet.repulse.x
-    const by = tet.pos.y + tet.repulse.y
-    const bz = tet.pos.z
+    let px = tet.pos.x + tet.repulse.x
+    let py = tet.pos.y + tet.repulse.y
+    let pz = tet.pos.z
 
-    // Phase 1 — scatter from letters
-    const sx = bx + (tet.scatterTarget.x - bx) * spE
-    const sy = by + (tet.scatterTarget.y - by) * spE
-    const sz = bz + (tet.scatterTarget.z - bz) * spE
-
-    // Phase 2 — bulb
-    const buldX = sx + (tet.bulbTarget.x - sx) * sp2E
-    const buldY = sy + (tet.bulbTarget.y - sy) * sp2E
-    const buldZ = sz + (tet.bulbTarget.z - sz) * sp2E
-
-    // Phase 3 — scatter from bulb
-    const s2x = buldX + (tet.scatter2Target.x - buldX) * sp3E
-    const s2y = buldY + (tet.scatter2Target.y - buldY) * sp3E
-    const s2z = buldZ + (tet.scatter2Target.z - buldZ) * sp3E
-
-    // Phase 4 — Sather Tower
-    const s4x = s2x + (tet.towerTarget.x - s2x) * sp4E
-    const s4y = s2y + (tet.towerTarget.y - s2y) * sp4E
-    const s4z = s2z + (tet.towerTarget.z - s2z) * sp4E
-
-    // Phase 5 — scatter from tower
-    const s5x = s4x + (tet.scatter3Target.x - s4x) * sp5E
-    const s5y = s4y + (tet.scatter3Target.y - s4y) * sp5E
-    const s5z = s4z + (tet.scatter3Target.z - s4z) * sp5E
-
-    // Phase 6 — FIAT LUX
-    tet.mesh.position.set(
-      s5x + (tet.fiatLuxTarget.x - s5x) * sp6E,
-      s5y + (tet.fiatLuxTarget.y - s5y) * sp6E,
-      s5z + (tet.fiatLuxTarget.z - s5z) * sp6E,
-    )
+    for (let i = 0; i < tet.phaseTargets.length; i++) {
+      const e = easeInOut(phaseProgress[i])
+      if (e <= 0) break   // 后续相位都为 0（顺序不重叠），可提前结束
+      const tgt = tet.phaseTargets[i]
+      px += (tgt.x - px) * e
+      py += (tgt.y - py) * e
+      pz += (tgt.z - pz) * e
+    }
+    tet.mesh.position.set(px, py, pz)
 
     if (tet.pos.distanceTo(tet.target) < 0.05) {
       const { target, idx } = pickTarget(tet.groupIdx, tet.targetIdx)
@@ -853,9 +805,11 @@ function render() {
     tet.mesh.rotation.z += tet.rotSpeed.z * f
   })
 
-  // Mouse rotation: suppressed during phases 1-5, gradually restored as FIAT LUX forms
-  const suppressBase = Math.max(sp, sp2, sp3, sp4, sp5)
-  const rotSuppression = suppressBase * (sp6 > 0 ? 1 - sp6 : 1)
+  // Mouse rotation: suppressed through the story, restored as FIAT LUX forms
+  let anyActive = 0
+  for (let i = 0; i < PHASES.length - 1; i++) anyActive = Math.max(anyActive, phaseProgress[i])
+  const fiat = phaseProgress[PHASES.length - 1]
+  const rotSuppression = anyActive * (1 - fiat)
   const rotEase = 0.06 * (1 - rotSuppression * 0.9) * f
   currentRotY += (targetRotY - currentRotY) * rotEase
   currentRotX += (targetRotX - currentRotX) * rotEase
@@ -875,18 +829,15 @@ function render() {
     mesh.rotation.z += rotSpeed.z * f
   })
 
-  // Dark mode → bloom composer (glow); light mode → plain render (clean lines).
-  // Read the theme live each frame so the glow appears as soon as VitePress
-  // resolves the appearance (no manual refresh needed on first load).
   if (isDark.value) composer.render()
   else renderer.render(scene, camera)
 }
 
 function onResize() {
-  const w = container.value!.clientWidth
-  const h = container.value!.clientHeight
+  const w = stage.value!.clientWidth
+  const h = stage.value!.clientHeight
   camera.aspect = w / h
-  camera.position.z = fitCameraZ(w / h)   // 窄屏后拉以装下完整形态
+  camera.position.z = fitCameraZ(w / h)
   camera.updateProjectionMatrix()
   renderer.setSize(w, h)
   composer?.setSize(w, h)
@@ -895,24 +846,38 @@ function onResize() {
   bgMat.resolution.set(w, h)
 }
 
+// 内容区进入视口时淡入上移（仅在允许动效时启用；SSR/无 JS 时默认可见）
+let io: IntersectionObserver | undefined
+function setupContentReveal() {
+  if (!content.value) return
+  if (!window.matchMedia('(prefers-reduced-motion: no-preference)').matches) return
+  content.value.classList.add('js-anim')
+  io = new IntersectionObserver((entries) => {
+    for (const en of entries) {
+      if (en.isIntersecting) {
+        en.target.classList.add('in-view')
+        io!.unobserve(en.target)
+      }
+    }
+  }, { threshold: 0.15 })
+  content.value.querySelectorAll('.home-sec').forEach(el => io!.observe(el))
+}
+
 onMounted(() => {
-  // 加载时判断手机/桌面（一次性，与 custom.css 的 767px 断点一致）
   isMobile = window.matchMedia(MOBILE_MQ).matches
-  // Give the page scroll room to trigger the scatter animation
-  document.body.style.minHeight = '1150vh'
-  // Seed smoothing from the current scroll so a mid-page refresh doesn't sweep.
   targetScrollPct = smoothScrollPct = window.scrollY / window.innerHeight
   lastTime = performance.now()
   applyProgress(smoothScrollPct)
   init()
+  setupContentReveal()
   window.addEventListener('resize', onResize)
   window.addEventListener('mousemove', onMouseMove)
   window.addEventListener('scroll', onScroll, { passive: true })
 })
 
 onUnmounted(() => {
-  document.body.style.minHeight = ''
   cancelAnimationFrame(rafId)
+  io?.disconnect()
   window.removeEventListener('resize', onResize)
   window.removeEventListener('mousemove', onMouseMove)
   window.removeEventListener('scroll', onScroll)
@@ -923,6 +888,12 @@ onUnmounted(() => {
 
 <style scoped>
 .bit-home {
+  position: relative;
+  background: var(--vp-c-bg);
+}
+
+/* 固定舞台：3D canvas + 叙事覆盖层 */
+.bit-home__stage {
   position: fixed;
   top: var(--vp-nav-height);
   left: 0;
@@ -930,11 +901,18 @@ onUnmounted(() => {
   bottom: 0;
   z-index: 1;
   background: var(--vp-c-bg);
+  pointer-events: none;   /* 纯装饰；鼠标交互走 window 监听 */
+  will-change: opacity;
 }
 
 canvas {
   position: absolute;
   inset: 0;
+}
+
+.bit-home__spacer {
+  position: relative;
+  z-index: 0;
 }
 
 .doc-label {
@@ -948,12 +926,10 @@ canvas {
   text-transform: uppercase;
   color: var(--vp-c-text-2);
   opacity: 0.5;
-  pointer-events: none;
   user-select: none;
   white-space: nowrap;
 }
 
-/* Faint fluorescent glow at night, matching the tetrahedra bloom */
 .dark .doc-label {
   color: var(--vp-c-text-1);
   text-shadow:
@@ -961,84 +937,59 @@ canvas {
     0 0 18px rgba(96, 165, 250, 0.28);
 }
 
-/* ── Bulb-phase copy ── */
-.bulb-copy {
+/* ── 职能文案（桌面左右交替） ── */
+.phase-copy {
   position: absolute;
-  left: 6%;
-  top: 50%;
-  transform: translateY(-50%);
+  top: 34%;
+  max-width: min(46%, 560px);
   opacity: 0;
-  pointer-events: none;
   user-select: none;
   will-change: opacity, transform;
 }
+.phase-copy--left  { left: 6%; }
+.phase-copy--right { right: 6%; text-align: right; }
 
-.bulb-copy__tag {
+.phase-copy__tag {
   display: block;
   font-size: clamp(0.8rem, 1.4vw, 1.1rem);
   font-weight: 500;
-  letter-spacing: 0.3em;
+  letter-spacing: 0.32em;
   text-transform: uppercase;
   color: var(--vp-c-brand-1);
-  margin-bottom: 1.8rem;
+  margin-bottom: 1.6rem;
 }
-
-.bulb-copy__headline {
-  margin: 0 0 2rem;
-  font-size: clamp(3.5rem, 7.5vw, 6.5rem);
-  font-weight: 700;
-  line-height: 1.05;
-  letter-spacing: -0.03em;
-  color: var(--vp-c-text-1);
-}
-
-.bulb-copy__body {
-  margin: 0;
-  font-size: clamp(0.9rem, 1.6vw, 1.3rem);
-  font-weight: 300;
-  letter-spacing: 0.18em;
-  color: var(--vp-c-text-2);
-  opacity: 0.75;
-}
-
-/* ── Tower-phase copy ── */
-.tower-copy {
-  position: absolute;
-  right: 6%;
-  top: 50%;
-  opacity: 0;
-  text-align: right;
-  pointer-events: none;
-  user-select: none;
-  will-change: opacity, transform;
-}
-
-.tower-copy__tag {
+/* 标签下的品牌色短线锚点 */
+.phase-copy__tag::after {
+  content: '';
   display: block;
-  font-size: clamp(0.8rem, 1.4vw, 1.1rem);
-  font-weight: 500;
-  letter-spacing: 0.3em;
-  text-transform: uppercase;
-  color: var(--vp-c-brand-1);
-  margin-bottom: 1.8rem;
+  width: 32px;
+  height: 2px;
+  margin-top: 0.9rem;
+  border-radius: 2px;
+  background: var(--vp-c-brand-1);
 }
+.phase-copy--right .phase-copy__tag::after { margin-left: auto; }
 
-.tower-copy__headline {
-  margin: 0 0 2rem;
-  font-size: clamp(3.5rem, 7.5vw, 6.5rem);
-  font-weight: 700;
-  line-height: 1.05;
-  letter-spacing: -0.03em;
+.phase-copy__headline {
+  margin: 0 0 1.6rem;
+  font-size: clamp(2.4rem, 5vw, 4.4rem);
+  font-weight: 800;
+  line-height: 1.18;
+  letter-spacing: 0.02em;
   color: var(--vp-c-text-1);
 }
+.phase-copy__headline > span {
+  display: block;
+  white-space: nowrap;
+}
 
-.tower-copy__body {
+.phase-copy__body {
   margin: 0;
   font-size: clamp(0.9rem, 1.6vw, 1.3rem);
   font-weight: 300;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.16em;
   color: var(--vp-c-text-2);
-  opacity: 0.75;
+  opacity: 0.8;
 }
 
 /* ── FIAT LUX subtitle ── */
@@ -1053,53 +1004,207 @@ canvas {
   font-weight: 300;
   letter-spacing: 0.55em;
   color: var(--vp-c-text-2);
-  pointer-events: none;
   user-select: none;
   will-change: opacity, transform;
 }
 
-/* ── Home page footer ── */
-.bit-home-footer {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  opacity: 0;
-  pointer-events: none;
-  will-change: opacity;
-  z-index: 10;
+/* ── 招新内容区 ── */
+.bit-home__content {
+  position: relative;
+  z-index: 2;
+  background: var(--vp-c-bg);
 }
 
-/* ── 手机竖屏：竖向堆叠（3D 图形在上半部、文案移到下半部整行居中） ──
-   断点与 JS 的 isMobile / custom.css 保持一致（767px）。3D 形态的居中与上移由
-   脚本里的 isMobile 坐标分支完成；这里只负责把 DOM 文案改成下半部整行居中。 */
+.home-sec {
+  max-width: 1152px;
+  margin: 0 auto;
+  padding: 80px 24px;
+}
+
+.bit-home__content.js-anim .home-sec {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.bit-home__content.js-anim .home-sec.in-view {
+  opacity: 1;
+  transform: none;
+}
+
+.home-sec__title {
+  font-size: clamp(1.5rem, 3vw, 2.2rem);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin: 0 0 32px;
+  color: var(--vp-c-text-1);
+  border: none;
+}
+
+/* 部门简介 */
+.home-intro {
+  text-align: center;
+  padding-top: 120px;
+}
+.home-intro__eyebrow {
+  font-size: 0.85rem;
+  font-weight: 500;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--vp-c-brand-1);
+  margin: 0 0 20px;
+}
+.home-intro__title {
+  font-size: clamp(2rem, 5vw, 3.4rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin: 0 0 24px;
+  color: var(--vp-c-text-1);
+}
+.home-intro__lead {
+  max-width: 720px;
+  margin: 0 auto;
+  font-size: clamp(1rem, 2vw, 1.25rem);
+  line-height: 1.8;
+  color: var(--vp-c-text-2);
+}
+.home-intro__lead strong { color: var(--vp-c-text-1); }
+
+/* 四大职能卡片 */
+.home-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+}
+.home-card {
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 14px;
+  padding: 28px 24px;
+  background: var(--vp-c-bg-soft);
+  transition: border-color .25s, transform .25s, box-shadow .25s;
+}
+.home-card:hover {
+  border-color: var(--vp-c-brand-1);
+  transform: translateY(-4px);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, .09);
+}
+.home-card__icon { font-size: 34px; line-height: 1; }
+.home-card__title {
+  margin: 16px 0 10px;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--vp-c-text-1);
+}
+.home-card__desc {
+  margin: 0 0 16px;
+  font-size: 0.92rem;
+  line-height: 1.7;
+  color: var(--vp-c-text-2);
+}
+.home-card__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+}
+.home-card__links a {
+  font-size: 0.86rem;
+  font-weight: 500;
+  color: var(--vp-c-brand-1);
+  text-decoration: none;
+  transition: color .2s;
+}
+.home-card__links a:hover { color: var(--vp-c-brand-2); }
+
+/* 为什么加入 */
+.home-reasons {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 28px;
+}
+.home-reason__num {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--vp-c-brand-1);
+  opacity: 0.5;
+}
+.home-reason__title {
+  margin: 10px 0 8px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--vp-c-text-1);
+}
+.home-reason__desc {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.7;
+  color: var(--vp-c-text-2);
+}
+
+/* 招新 CTA */
+.home-cta {
+  text-align: center;
+  padding-top: 64px;
+  padding-bottom: 96px;
+}
+.home-cta__title {
+  font-size: clamp(1.8rem, 4.5vw, 3rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin: 0 0 20px;
+  color: var(--vp-c-text-1);
+}
+.home-cta__lead {
+  max-width: 640px;
+  margin: 0 auto 36px;
+  font-size: clamp(1rem, 2vw, 1.2rem);
+  line-height: 1.8;
+  color: var(--vp-c-text-2);
+}
+.home-cta__btn {
+  display: inline-block;
+  padding: 14px 40px;
+  border-radius: 24px;
+  font-size: 1.05rem;
+  font-weight: 600;
+  text-decoration: none;
+  color: var(--vp-button-brand-text);
+  background: var(--vp-button-brand-bg);
+  border: 1px solid var(--vp-button-brand-border);
+  transition: background .2s, transform .2s;
+}
+.home-cta__btn:hover {
+  background: var(--vp-button-brand-hover-bg);
+  transform: translateY(-2px);
+}
+.home-cta__note {
+  margin: 20px 0 0;
+  font-size: 0.85rem;
+  color: var(--vp-c-text-3);
+}
+
+/* ── 手机竖屏：职能文案移到下半部整行居中（断点同 JS isMobile / custom.css） ── */
 @media (max-width: 767px) {
-  .bulb-copy,
-  .tower-copy {
+  .phase-copy {
     left: 0;
     right: 0;
     top: auto;
     bottom: 10%;
-    transform: none;        /* 水平居中改由 text-align 负责；JS 仍设 translateY 做入场 */
-    text-align: center;     /* 覆盖 .tower-copy 的 right 对齐 */
+    max-width: none;
+    transform: none;
+    text-align: center;
     padding: 0 6%;
   }
-
-  /* 标语字号缩小，避免在窄屏过大换行 */
-  .bulb-copy__headline,
-  .tower-copy__headline {
-    font-size: clamp(2.2rem, 9vw, 3.2rem);
+  .phase-copy__headline {
+    font-size: clamp(2rem, 8.5vw, 2.8rem);
+    line-height: 1.2;
     margin-bottom: 1.2rem;
   }
+  .phase-copy__tag { margin-bottom: 1rem; }
+  /* 短线居中（覆盖右对齐规则） */
+  .phase-copy__tag::after { margin-left: auto; margin-right: auto; }
 
-  .bulb-copy__tag,
-  .tower-copy__tag {
-    margin-bottom: 1rem;
-  }
+  .doc-label { bottom: 34%; }
 
-  /* "Documentation" 略微上提，更贴近上方的 BIT */
-  .doc-label {
-    bottom: 34%;
-  }
+  .home-sec { padding: 56px 22px; }
+  .home-intro { padding-top: 80px; }
 }
 </style>
