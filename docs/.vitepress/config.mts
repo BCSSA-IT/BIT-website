@@ -4,7 +4,7 @@ import { defineConfig } from 'vitepress'
 export default defineConfig({
   title: "BIT-DOCs",
   description: "Workflow documentation and project setup guides for the BCSSA IT Department.",
-  // Deployed to GitHub Pages at https://kaiyueli-bruce.github.io/BIT-website/
+  // Deployed to GitHub Pages at https://bcssa-it.github.io/BIT-website/
   base: '/BIT-website/',
   themeConfig: {
     nav: [
@@ -34,7 +34,7 @@ export default defineConfig({
     ],
 
     socialLinks: [
-      { icon: 'github', link: 'https://github.com/vuejs/vitepress' }
+      { icon: 'github', link: 'https://github.com/BCSSA-IT/BIT-website' }
     ]
   }
 })
