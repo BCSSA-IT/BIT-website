@@ -161,6 +161,9 @@ let mat: LineMaterial
 let bgMat: LineMaterial
 let rafId: number
 let t = 0
+let contextLost = false   // WebGL 上下文丢失期间暂停渲染，restored 后重启
+let frozenBaked = false   // 进内容区后：FIAT LUX 已快照成静态背景图，仅渲染漂浮的背景四面体
+let bakedDark = false      // 快照时的明暗模式，主题切换后需重拍
 
 let composer: EffectComposer
 let bloomPass: UnrealBloomPass
@@ -314,10 +317,8 @@ function applyProgress(pct: number) {
     fiatLuxSub.value.style.transform = `translateX(-50%) translateY(${(1 - e) * 20}px)`
   }
 
-  // 舞台随内容区揭示淡出（内容区在常规流，舞台淡到 0 后不再遮挡）
-  if (stage.value) {
-    stage.value.style.opacity = String(1 - contentReveal)
-  }
+  // 舞台始终可见：进内容区后定格的 FIAT LUX + 背景四面体作为半透明内容区的装饰背景。
+  // （前景 FIAT LUX 的压暗在 render 里通过 mat.opacity 完成。）
 }
 
 function buildLetterData() {
@@ -617,6 +618,19 @@ function init() {
   renderer.setSize(w, h)
   renderer.setClearColor(0x000000, 0)
 
+  // WebGL 上下文丢失兜底：丢失时阻止默认（允许恢复）并暂停；恢复后重启渲染。
+  // three 会在 restored 时自动重建 GL 资源，故重启 render() 即可。
+  canvas.value!.addEventListener('webglcontextlost', (e) => {
+    e.preventDefault()
+    contextLost = true
+    cancelAnimationFrame(rafId)
+  }, false)
+  canvas.value!.addEventListener('webglcontextrestored', () => {
+    contextLost = false
+    lastTime = performance.now()
+    render()
+  }, false)
+
   scene = new THREE.Scene()
   camera = new THREE.PerspectiveCamera(FOV, w / h, 0.1, 100)
   camera.position.z = fitCameraZ(w / h)
@@ -740,8 +754,51 @@ function matOpacityFor(): number {
   return 1
 }
 
+/** 背景小四面体的正弦漂浮 + 自转（前景定格后仍持续，作为装饰）。 */
+function driftBackground(f: number) {
+  const bgAmp = 2.0
+  bgTets.forEach(({ mesh, base, phase, speed, rotSpeed }) => {
+    mesh.position.x = base.x + Math.sin(t * speed + phase.x) * bgAmp
+    mesh.position.y = base.y + Math.cos(t * speed * 0.8 + phase.y) * bgAmp
+    mesh.position.z = base.z + Math.sin(t * speed * 0.5 + phase.z) * bgAmp * 0.4
+    mesh.rotation.x += rotSpeed.x * f
+    mesh.rotation.y += rotSpeed.y * f
+    mesh.rotation.z += rotSpeed.z * f
+  })
+}
+
+/** 进内容区：把当前「暗淡 FIAT LUX（仅前景）」渲染一帧并快照成 stage 背景图，然后隐藏前景、
+ *  之后每帧只渲染 ~70 个背景四面体（无 bloom，开销极小）→ FIAT LUX 定格、背景仍灵动漂浮。
+ *  toDataURL 在 render 同一 tick 内紧跟一次渲染调用，drawingBuffer 仍有效，无需 preserveDrawingBuffer。 */
+function bakeFreeze() {
+  letterMeshGroups.forEach(g => (g.visible = true))
+  bgTets.forEach(b => (b.mesh.visible = false))
+  mat.opacity = matOpacityFor() * (1 - contentReveal * 0.82)   // 前景压暗成底纹
+  mat.transparent = true
+  if (isDark.value) composer.render()
+  else renderer.render(scene, camera)
+
+  stage.value!.style.backgroundImage = `url(${canvas.value!.toDataURL()})`
+  stage.value!.style.backgroundSize = 'cover'
+  stage.value!.style.backgroundPosition = 'center'
+
+  letterMeshGroups.forEach(g => (g.visible = false))   // 之后只画背景四面体
+  bgTets.forEach(b => (b.mesh.visible = true))
+  frozenBaked = true
+  bakedDark = isDark.value
+}
+
+/** 离开内容区：清掉快照背景、恢复前景显示，回到完整动画。 */
+function unbakeFreeze() {
+  stage.value!.style.backgroundImage = ''
+  letterMeshGroups.forEach(g => (g.visible = true))
+  bgTets.forEach(b => (b.mesh.visible = true))
+  frozenBaked = false
+}
+
 function render() {
   rafId = requestAnimationFrame(render)
+  if (contextLost) return   // WebGL 上下文丢失：等待 restored 再恢复
 
   const now = performance.now()
   let dt = (now - lastTime) / 1000
@@ -749,9 +806,21 @@ function render() {
   if (dt > 0.1) dt = 0.1
   const f = dt * 60
 
+  if (document.hidden) return   // 后台标签页：停渲染降负载（回前台自动续）
+
   const SMOOTH_TAU = 0.12
   smoothScrollPct += (targetScrollPct - smoothScrollPct) * (1 - Math.exp(-dt / SMOOTH_TAU))
   applyProgress(smoothScrollPct)
+
+  // 内容区：前景 FIAT LUX 定格成静态背景图，仅背景小四面体继续漂浮（开销极小，不卡）。
+  if (contentReveal >= 1) {
+    if (!frozenBaked || isDark.value !== bakedDark) bakeFreeze()
+    t += 0.005 * f
+    driftBackground(f)
+    renderer.render(scene, camera)   // 只剩背景四面体可见，不走 bloom
+    return
+  }
+  if (frozenBaked) unbakeFreeze()   // 滚回叙事段：恢复完整动画
 
   t += 0.005 * f
 
@@ -762,7 +831,7 @@ function render() {
   const REPULSE_STRENGTH = 0.022
   const REPULSE_DECAY = 0.92
 
-  mat.opacity = matOpacityFor()
+  mat.opacity = matOpacityFor() * (1 - contentReveal * 0.82)   // 进内容区时前景(FIAT LUX)渐暗成底纹
   mat.transparent = true
 
   // Foreground — neighbour-graph walk in local space + chained phase lerp
@@ -818,16 +887,7 @@ function render() {
     g.rotation.x = currentRotX
   })
 
-  // Background drift
-  const bgAmp = 2.0
-  bgTets.forEach(({ mesh, base, phase, speed, rotSpeed }) => {
-    mesh.position.x = base.x + Math.sin(t * speed + phase.x) * bgAmp
-    mesh.position.y = base.y + Math.cos(t * speed * 0.8 + phase.y) * bgAmp
-    mesh.position.z = base.z + Math.sin(t * speed * 0.5 + phase.z) * bgAmp * 0.4
-    mesh.rotation.x += rotSpeed.x * f
-    mesh.rotation.y += rotSpeed.y * f
-    mesh.rotation.z += rotSpeed.z * f
-  })
+  driftBackground(f)
 
   if (isDark.value) composer.render()
   else renderer.render(scene, camera)
@@ -844,6 +904,9 @@ function onResize() {
   bloomPass?.setSize(w, h)
   mat.resolution.set(w, h)
   bgMat.resolution.set(w, h)
+
+  // 已定格时 setSize 会清空画布并令快照尺寸失配 → 按新尺寸重拍 FIAT LUX 静态背景图
+  if (!contextLost && frozenBaked) bakeFreeze()
 }
 
 // 内容区进入视口时淡入上移（仅在允许动效时启用；SSR/无 JS 时默认可见）
@@ -1009,10 +1072,13 @@ canvas {
 }
 
 /* ── 招新内容区 ── */
+/* 半透明背景：让进入内容区后「定格的 FIAT LUX + 背景四面体」作为装饰透出来。
+   旧浏览器回退到实色（背景不透出，但仍可读）。卡片/CTA 自带实色底，保证可读性。 */
 .bit-home__content {
   position: relative;
   z-index: 2;
   background: var(--vp-c-bg);
+  background: color-mix(in srgb, var(--vp-c-bg) 88%, transparent);
 }
 
 .home-sec {
