@@ -219,7 +219,7 @@ const fgTets: FgTetData[] = []
 const bgTets: BgTetData[] = []
 
 // ── 叙事形态序列（letters 为初始 home 态，不在此列） ──────────────────
-// 顺序即滚动叙事顺序：相机 → 笔尖 → 浏览器</> → 直播 → FIAT LUX。
+// 顺序即滚动叙事顺序：相机 → 海报 → 浏览器</> → 直播 → FIAT LUX。
 const FORMATIONS: { name: string; build: (count: number) => THREE.Vector3[] }[] = [
   { name: 'camera',  build: buildCameraTargets  },
   { name: 'design',  build: buildDesignTargets  },
@@ -278,6 +278,37 @@ function onMouseMove(e: MouseEvent) {
 
 function onScroll() {
   targetScrollPct = window.scrollY / window.innerHeight
+}
+
+// ── 移动端：用设备朝向（陀螺仪/加速度计）驱动形态倾斜，替代鼠标视差 ──
+// 桌面用 onMouseMove 写 targetRotX/Y；手机改用 deviceorientation，避免触摸/滑动
+// 派发的合成 mousemove 把形态带偏。复用同一条缓动→group.rotation 链路。
+let orientBaseBeta: number | null = null   // 首帧 beta 作为「静止持握角」基准
+let pendingTiltAsk: (() => void) | null = null
+
+function onDeviceOrientation(e: DeviceOrientationEvent) {
+  if (e.gamma == null || e.beta == null) return
+  if (orientBaseBeta == null) orientBaseBeta = e.beta
+  const c1 = (x: number) => Math.max(-1, Math.min(1, x))
+  targetRotY = c1(e.gamma / 35) * 0.45                       // 左右倾（绕 Y），与鼠标同幅度
+  targetRotX = c1((e.beta - orientBaseBeta) / 35) * 0.25     // 前后倾相对静止角（绕 X）
+}
+
+function enableTilt() {
+  window.addEventListener('deviceorientation', onDeviceOrientation, true)
+}
+
+function setupMobileTilt() {
+  const DOE: any = (window as any).DeviceOrientationEvent
+  if (!DOE) return
+  if (typeof DOE.requestPermission === 'function') {         // iOS 13+：需用户手势授权
+    pendingTiltAsk = () => DOE.requestPermission()
+      .then((s: string) => { if (s === 'granted') enableTilt() })
+      .catch(() => {})
+    window.addEventListener('touchend', pendingTiltAsk, { once: true })
+  } else {
+    enableTilt()                                             // Android 等：HTTPS 下直接可用
+  }
 }
 
 const easeInOut = (x: number) => x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2
@@ -484,27 +515,28 @@ function buildCameraTargets(count: number): THREE.Vector3[] {
   return sampleCanvas(off, count, -0.3, isMobile ? 4.4 : 5.6, isMobile ? 0 : -3.2, isMobile ? 2.0 : 0.4)
 }
 
-/** ✒️ 笔尖：细长三角 + 中缝 + 透气孔（海报/视觉设计） */
+/** 🖼️ 海报/画框：外框 + 太阳 + 山（海报/视觉设计） */
 function buildDesignTargets(count: number): THREE.Vector3[] {
-  const W = 200, H = 320
+  const W = 240, H = 300
   const off = document.createElement('canvas'); off.width = W; off.height = H
   const ctx = off.getContext('2d')!
   ctx.strokeStyle = '#fff'; ctx.lineCap = 'round'; ctx.lineJoin = 'round'
 
   ctx.lineWidth = 6
-  ctx.beginPath()                                            // nib outline
-  ctx.moveTo(62, 36)
-  ctx.lineTo(138, 36)
-  ctx.lineTo(120, 250)
-  ctx.lineTo(100, 296)
-  ctx.lineTo(80, 250)
-  ctx.closePath(); ctx.stroke()
+  roundRect(ctx, 34, 28, 172, 244, 14); ctx.stroke()         // poster frame
   ctx.lineWidth = 5
-  ctx.beginPath(); ctx.moveTo(100, 150); ctx.lineTo(100, 288); ctx.stroke()  // centre slit
-  ctx.beginPath(); ctx.arc(100, 120, 14, 0, Math.PI * 2); ctx.stroke()       // vent hole
+  ctx.beginPath(); ctx.arc(150, 92, 20, 0, Math.PI * 2); ctx.stroke()        // sun
+  ctx.lineWidth = 6
+  ctx.beginPath()                                            // mountains (two peaks)
+  ctx.moveTo(46, 244)
+  ctx.lineTo(96, 168)
+  ctx.lineTo(128, 206)
+  ctx.lineTo(160, 156)
+  ctx.lineTo(194, 244)
+  ctx.stroke()
 
   // 文案在左 → 形态偏右
-  return sampleCanvas(off, count, -0.3, isMobile ? 2.5 : 2.9, isMobile ? 0 : 3.1, isMobile ? 1.6 : 0)
+  return sampleCanvas(off, count, -0.3, isMobile ? 2.8 : 3.4, isMobile ? 0 : 3.1, isMobile ? 1.6 : 0)
 }
 
 /** </> 浏览器窗口：外框 + 标题栏三点 + 代码尖括号（网站开发） */
@@ -824,8 +856,10 @@ function render() {
 
   t += 0.005 * f
 
-  raycaster.setFromCamera(new THREE.Vector2(mouseNx, -mouseNy), camera)
-  raycaster.ray.intersectPlane(mousePlane, mouseWorld3D)
+  if (!isMobile) {   // 手机无指针，跳过鼠标排斥（否则射线打在屏幕中心，形态中心被挖洞）
+    raycaster.setFromCamera(new THREE.Vector2(mouseNx, -mouseNy), camera)
+    raycaster.ray.intersectPlane(mousePlane, mouseWorld3D)
+  }
 
   const REPULSE_RADIUS = 0.8
   const REPULSE_STRENGTH = 0.022
@@ -838,14 +872,16 @@ function render() {
   fgTets.forEach(tet => {
     tet.pos.lerp(tet.target, Math.min(1, tet.lerpSpeed * f))
 
-    const mouseLocal = letterMeshGroups[tet.groupIdx].worldToLocal(mouseWorld3D.clone())
-    const dx = tet.pos.x - mouseLocal.x
-    const dy = tet.pos.y - mouseLocal.y
-    const dist2D = Math.sqrt(dx * dx + dy * dy)
-    if (dist2D < REPULSE_RADIUS && dist2D > 0.001) {
-      const force = (1 - dist2D / REPULSE_RADIUS) * REPULSE_STRENGTH * f
-      tet.repulse.x += (dx / dist2D) * force
-      tet.repulse.y += (dy / dist2D) * force
+    if (!isMobile) {
+      const mouseLocal = letterMeshGroups[tet.groupIdx].worldToLocal(mouseWorld3D.clone())
+      const dx = tet.pos.x - mouseLocal.x
+      const dy = tet.pos.y - mouseLocal.y
+      const dist2D = Math.sqrt(dx * dx + dy * dy)
+      if (dist2D < REPULSE_RADIUS && dist2D > 0.001) {
+        const force = (1 - dist2D / REPULSE_RADIUS) * REPULSE_STRENGTH * f
+        tet.repulse.x += (dx / dist2D) * force
+        tet.repulse.y += (dy / dist2D) * force
+      }
     }
     tet.repulse.multiplyScalar(Math.pow(REPULSE_DECAY, f))
 
@@ -934,7 +970,8 @@ onMounted(() => {
   init()
   setupContentReveal()
   window.addEventListener('resize', onResize)
-  window.addEventListener('mousemove', onMouseMove)
+  if (isMobile) setupMobileTilt()                       // 手机：朝向驱动倾斜
+  else window.addEventListener('mousemove', onMouseMove) // 桌面：鼠标视差
   window.addEventListener('scroll', onScroll, { passive: true })
 })
 
@@ -942,7 +979,12 @@ onUnmounted(() => {
   cancelAnimationFrame(rafId)
   io?.disconnect()
   window.removeEventListener('resize', onResize)
-  window.removeEventListener('mousemove', onMouseMove)
+  if (isMobile) {
+    window.removeEventListener('deviceorientation', onDeviceOrientation, true)
+    if (pendingTiltAsk) window.removeEventListener('touchend', pendingTiltAsk)
+  } else {
+    window.removeEventListener('mousemove', onMouseMove)
+  }
   window.removeEventListener('scroll', onScroll)
   composer?.dispose()
   renderer?.dispose()
