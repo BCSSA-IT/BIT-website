@@ -3,9 +3,9 @@ title: 快速参考
 description: 部门拍摄时所需的照片与视频格式速查卡
 ---
 
-# 拍摄速查卡
+# 速查卡
 
-部门活动拍摄前，按下面的卡片快速核对相机设置即可。详细原理见[视频照片格式](/photography/formats)。
+部门活动从拍摄到交付，按下面的卡片快速核对设置即可：拍摄前对相机格式，后期导出时对命名与格式。详细原理见[视频照片格式](/photography/formats)与[照片后期](/post/photo)。
 
 <div class="ref-cards">
 
@@ -28,6 +28,18 @@ description: 部门拍摄时所需的照片与视频格式速查卡
     <li>分辨率 <strong>1080p</strong>，帧率 <strong>60fps</strong></li>
     <li>机器 <strong>支持 Log → 开启 Log</strong>，后期套 LUT 调色</li>
     <li>不支持 Log → 编码选 <strong>H.265</strong>（省体积）或 <strong>H.264</strong>（最兼容）</li>
+  </ul>
+</div>
+
+<div class="ref-card">
+  <div class="ref-card__icon">🖼️</div>
+  <div class="ref-card__title">照片后期 · 导出</div>
+  <div class="ref-card__main">JPEG · sRGB · 长边 2048</div>
+  <ul class="ref-card__notes">
+    <li>命名 <strong>日期_活动名_序号</strong>，如 <code>20260601_校庆_001</code></li>
+    <li>格式 <strong>JPEG</strong>，色彩空间 <strong>sRGB</strong></li>
+    <li>社媒 / 公众号：长边 <strong>2048</strong>，画质 <strong>80</strong></li>
+    <li>存档 / 印刷：<strong>原尺寸</strong>，画质 <strong>100</strong></li>
   </ul>
 </div>
 
