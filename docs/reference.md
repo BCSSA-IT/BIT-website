@@ -43,6 +43,18 @@ description: 部门拍摄时所需的照片与视频格式速查卡
   </ul>
 </div>
 
+<div class="ref-card">
+  <div class="ref-card__icon">🎞️</div>
+  <div class="ref-card__title">视频后期 · 导出</div>
+  <div class="ref-card__main">MP4 · H.264 · 1080p 60fps</div>
+  <ul class="ref-card__notes">
+    <li>封装 <strong>MP4</strong>，编码 <strong>H.264</strong>（兼容）或 <strong>H.265</strong>（省体积）</li>
+    <li>分辨率 / 帧率 <strong>1080p / 60fps</strong>（跟拍摄一致）</li>
+    <li>码率：1080p 约 <strong>16–24 Mbps</strong></li>
+    <li>音频 <strong>AAC</strong>，约 <strong>320 kbps</strong></li>
+  </ul>
+</div>
+
 </div>
 
 <style scoped>
