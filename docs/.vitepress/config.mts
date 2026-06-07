@@ -6,6 +6,18 @@ export default defineConfig({
   description: "Workflow documentation and project setup guides for the BCSSA IT Department.",
   // Deployed to GitHub Pages at https://bcssa-it.github.io/BIT-website/
   base: '/BIT-website/',
+
+  // 🥚 查看源码彩蛋：给会看页面源代码的人留个口信（构建时注入每页 head）
+  transformHtml: (code) =>
+    code.replace(
+      '<head>',
+      `<head>
+  <!--
+    你在看源码？我们就喜欢这种好奇心。
+    BCSSA 信息技术部（摄影 / 设计 / 开发 / 直播）常年招新 —— /BIT-website/join
+    会写代码的你，这里有你的位置。FIAT LUX.
+  -->`,
+    ),
   themeConfig: {
     nav: [
       { text: '主页', link: '/' },

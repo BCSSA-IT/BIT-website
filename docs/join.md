@@ -53,7 +53,7 @@ BCSSA 信息技术部（BIT）负责社团的**摄影摄像、海报设计、网
 
 ---
 
-[点我看这学期 61A final 答案 →](https://www.bilibili.com/video/BV1UT42167xb/)
+[点我看我们更多项目 →](https://www.bilibili.com/video/BV1UT42167xb/)
 
 <style scoped>
 .join-cta {
