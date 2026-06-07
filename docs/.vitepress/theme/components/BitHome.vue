@@ -107,7 +107,7 @@
           <div class="home-reason">
             <div class="home-reason__num">03</div>
             <div class="home-reason__title">找到同好</div>
-            <p class="home-reason__desc">一群同样热爱影像与技术的人，一起把事情做漂亮。</p>
+            <p class="home-reason__desc">一群同样热爱影像与技术的人，一起把每件作品做到最好。</p>
           </div>
         </div>
       </section>
@@ -117,9 +117,8 @@
         <p class="home-cta__lead">
           无论你想拿起相机、打磨设计、写代码还是做直播 —— 这里都有你的位置。
         </p>
-        <!-- TODO: 把下方链接换成真实联系方式（招新表单 / 群号 / 邮箱） -->
-        <a class="home-cta__btn" href="#join">加入我们</a>
-        <p class="home-cta__note">联系方式即将更新</p>
+        <a class="home-cta__btn" :href="withBase('/join')">加入我们</a>
+        <p class="home-cta__note">每学期初招新 · 点击查看招新详情</p>
       </section>
 
       <SiteFooter />

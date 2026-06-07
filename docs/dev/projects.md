@@ -91,7 +91,7 @@ git push -u origin feature/your-feature      # 3. 推到 GitHub
 
 ## 想参与？
 
-这些项目都由 BIT 自己从零做起。想上手开发，先照 [环境搭建](/dev/setup) 把本站在本地跑起来；想加入我们，见 [加入我们](/#join)。
+这些项目都由 BIT 自己从零做起。想上手开发，先照 [环境搭建](/dev/setup) 把本站在本地跑起来；想加入我们，见 [加入我们](/join)。
 
 <style scoped>
 .proj-card {

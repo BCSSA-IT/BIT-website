@@ -31,6 +31,7 @@ export default defineConfig({
           { text: '环境搭建',   link: '/dev/setup' },
         ]
       },
+      { text: '加入我们', link: '/join' },
     ],
 
     socialLinks: [
