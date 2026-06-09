@@ -24,6 +24,7 @@ description: 部门拍摄时所需的照片与视频格式速查卡
   <div class="ref-card__title">视频</div>
   <div class="ref-card__main">MOV · 1080p · 60fps</div>
   <ul class="ref-card__notes">
+    <li>每场活动<strong>务必至少记录 5 分钟视频</strong>——没相机时<strong>手机拍也行</strong></li>
     <li>封装统一用 <strong>MOV</strong></li>
     <li>分辨率 <strong>1080p</strong>，帧率 <strong>60fps</strong></li>
     <li>机器 <strong>支持 Log → 开启 Log</strong>，后期套 LUT 调色</li>
