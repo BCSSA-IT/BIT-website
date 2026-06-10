@@ -204,6 +204,7 @@ interface FgTetData {
   groupIdx:     number
   lerpSpeed:    number
   rotSpeed:     { x: number; y: number; z: number }
+  excite:       number          // 鼠标接近度（平滑）：驱动加速自转 + 微放大
 }
 
 interface BgTetData {
@@ -263,6 +264,29 @@ let lastTime = 0
 const raycaster = new THREE.Raycaster()
 const mousePlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0)
 const mouseWorld3D = new THREE.Vector3()
+
+// 背景视差用的平滑鼠标（独立于被 rotSuppression 压制的 currentRotX/Y）
+let parallaxNx = 0, parallaxNy = 0
+
+// 点击冲击波：以点击处为圆心向外扩散的环，扫过的四面体被沿径向推开（借 repulse 通道弹回）
+interface Shockwave { center: THREE.Vector3; age: number }
+const shockwaves: Shockwave[] = []
+const WAVE_SPEED   = 7      // 环扩散速度（世界单位/秒）
+const WAVE_WIDTH   = 1.2    // 环带宽度
+const WAVE_LIFE    = 1.2    // 寿命（秒）
+const WAVE_IMPULSE = 0.12   // 每帧注入冲量（环带扫过约 10 帧，叠加后是一次明显但不失控的炸开）
+
+function onStageClick(e: MouseEvent) {
+  if (!stage.value || !camera || contentReveal >= 1) return
+  const el = e.target as HTMLElement | null
+  if (el?.closest?.('a, button, .bit-home__content, .VPNav')) return
+  const rect = stage.value.getBoundingClientRect()
+  const nx = ((e.clientX - rect.left) / rect.width) * 2 - 1
+  const ny = ((e.clientY - rect.top) / rect.height) * 2 - 1
+  raycaster.setFromCamera(new THREE.Vector2(nx, -ny), camera)
+  const center = new THREE.Vector3()
+  if (raycaster.ray.intersectPlane(mousePlane, center)) shockwaves.push({ center, age: 0 })
+}
 
 function onMouseMove(e: MouseEvent) {
   if (!stage.value) return
@@ -352,7 +376,8 @@ function applyProgress(pct: number) {
 }
 
 function buildLetterData() {
-  const W = 1000, H = 200, STEP = 6
+  // 手机只拼 'BIT'（3 字符），加密采样补足四面体总数，否则后面 FIAT LUX 填不满笔画
+  const W = 1000, H = 200, STEP = isMobile ? 5 : 6
   const off = document.createElement('canvas')
   off.width = W; off.height = H
   const ctx = off.getContext('2d')!
@@ -455,6 +480,25 @@ function makeLineSegGeo(basePositions: Float32Array): LineSegmentsGeometry {
   return geo
 }
 
+/** 从 pts 均匀抽 count 个：count ≥ pts.length 时循环取（每点至少一次，全覆盖）；
+ *  否则按等距步长取样（空间均匀、无随机空洞）。最后洗牌打乱「四面体 ↔ 点」的
+ *  对应关系——pts 是行扫描序，若按序分配，同一字母组的 tets 会集中到同一横条带，
+ *  字母组各自绕质心旋转（鼠标视差/陀螺仪）时会出现整条带错位。 */
+function pickEvenly(pts: THREE.Vector3[], count: number): THREE.Vector3[] {
+  const out: THREE.Vector3[] = []
+  if (count >= pts.length) {
+    for (let i = 0; i < count; i++) out.push(pts[i % pts.length].clone())
+  } else {
+    const stride = pts.length / count
+    for (let i = 0; i < count; i++) out.push(pts[Math.floor(i * stride)].clone())
+  }
+  for (let i = out.length - 1; i > 0; i--) {            // Fisher–Yates
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[out[i], out[j]] = [out[j], out[i]]
+  }
+  return out
+}
+
 /** 通用：把离屏 canvas 描出的白色像素采样成 count 个世界坐标点。
  *  worldW = 世界宽度（高度按画布宽高比推算，保持图形不变形）；ox/oy = 世界偏移。 */
 function sampleCanvas(
@@ -477,7 +521,7 @@ function sampleCanvas(
     }
   }
   if (pts.length === 0) return Array.from({ length: count }, () => new THREE.Vector3(ox, oy, z))
-  return Array.from({ length: count }, () => pts[Math.floor(Math.random() * pts.length)].clone())
+  return pickEvenly(pts, count)
 }
 
 function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
@@ -585,7 +629,8 @@ function buildLiveTargets(count: number): THREE.Vector3[] {
 
 /** Rasterise "FIAT LUX" — same style as the initial letters formation. */
 function buildFiatLuxTargets(count: number): THREE.Vector3[] {
-  const W = 1000, H = 200, STEP = 6
+  // 手机用粗网格：候选点数 ≤ 四面体数 → pickEvenly 走循环分支，每个笔画点都有四面体
+  const W = 1000, H = 200, STEP = isMobile ? 8 : 6
   const off = document.createElement('canvas')
   off.width = W; off.height = H
   const ctx = off.getContext('2d')!
@@ -614,9 +659,7 @@ function buildFiatLuxTargets(count: number): THREE.Vector3[] {
   }
 
   if (pts.length === 0) return Array.from({ length: count }, () => new THREE.Vector3(0, 0, 0))
-  return Array.from({ length: count }, () =>
-    pts[Math.floor(Math.random() * pts.length)].clone()
-  )
+  return pickEvenly(pts, count)
 }
 
 /** 从字母 home 位置炸开（向外放大 + 朝相机方向抬升）。 */
@@ -714,6 +757,7 @@ function init() {
         targetIdx: idx,
         groupIdx: gi,
         lerpSpeed: 0.004 + Math.random() * 0.005,
+        excite: 0,
         rotSpeed: {
           x: (Math.random() - 0.5) * 0.025,
           y: (Math.random() - 0.5) * 0.035,
@@ -785,12 +829,14 @@ function matOpacityFor(): number {
   return 1
 }
 
-/** 背景小四面体的正弦漂浮 + 自转（前景定格后仍持续，作为装饰）。 */
+/** 背景小四面体的正弦漂浮 + 自转（前景定格后仍持续，作为装饰）。
+ *  叠加鼠标深度视差：越近（z 大）跟随越多、越远越少，拉出纵深感。 */
 function driftBackground(f: number) {
   const bgAmp = 2.0
   bgTets.forEach(({ mesh, base, phase, speed, rotSpeed }) => {
-    mesh.position.x = base.x + Math.sin(t * speed + phase.x) * bgAmp
-    mesh.position.y = base.y + Math.cos(t * speed * 0.8 + phase.y) * bgAmp
+    const depthFactor = (base.z + 4) / 3.5   // base.z ∈ [-4, -0.5] → 远 0 … 近 1
+    mesh.position.x = base.x + Math.sin(t * speed + phase.x) * bgAmp - parallaxNx * depthFactor * 0.9
+    mesh.position.y = base.y + Math.cos(t * speed * 0.8 + phase.y) * bgAmp + parallaxNy * depthFactor * 0.55
     mesh.position.z = base.z + Math.sin(t * speed * 0.5 + phase.z) * bgAmp * 0.4
     mesh.rotation.x += rotSpeed.x * f
     mesh.rotation.y += rotSpeed.y * f
@@ -843,6 +889,11 @@ function render() {
   smoothScrollPct += (targetScrollPct - smoothScrollPct) * (1 - Math.exp(-dt / SMOOTH_TAU))
   applyProgress(smoothScrollPct)
 
+  // 背景视差的平滑鼠标（定格后 driftBackground 仍在用，故放在两条渲染路径之前）
+  const pk = 1 - Math.exp(-dt / 0.2)
+  parallaxNx += (mouseNx - parallaxNx) * pk
+  parallaxNy += (mouseNy - parallaxNy) * pk
+
   // 内容区：前景 FIAT LUX 定格成静态背景图，仅背景小四面体继续漂浮（开销极小，不卡）。
   if (contentReveal >= 1) {
     if (!frozenBaked || isDark.value !== bakedDark) bakeFreeze()
@@ -860,9 +911,20 @@ function render() {
     raycaster.ray.intersectPlane(mousePlane, mouseWorld3D)
   }
 
-  const REPULSE_RADIUS = 0.8
-  const REPULSE_STRENGTH = 0.022
+  const REPULSE_RADIUS = 1.6
+  const REPULSE_STRENGTH = 0.03
   const REPULSE_DECAY = 0.92
+  const EXCITE_RADIUS = 1.4
+
+  // 鼠标 / 冲击波中心：每帧每字母组只转换一次局部坐标（而非每 tet 一次 worldToLocal）
+  const mouseLocals = isMobile ? null
+    : letterMeshGroups.map(g => g.worldToLocal(mouseWorld3D.clone()))
+  for (let wi = shockwaves.length - 1; wi >= 0; wi--) {
+    shockwaves[wi].age += dt
+    if (shockwaves[wi].age > WAVE_LIFE) shockwaves.splice(wi, 1)
+  }
+  const waveLocals = shockwaves.map(w =>
+    letterMeshGroups.map(g => g.worldToLocal(w.center.clone())))
 
   mat.opacity = matOpacityFor() * (1 - contentReveal * 0.82)   // 进内容区时前景(FIAT LUX)渐暗成底纹
   mat.transparent = true
@@ -871,21 +933,10 @@ function render() {
   fgTets.forEach(tet => {
     tet.pos.lerp(tet.target, Math.min(1, tet.lerpSpeed * f))
 
-    if (!isMobile) {
-      const mouseLocal = letterMeshGroups[tet.groupIdx].worldToLocal(mouseWorld3D.clone())
-      const dx = tet.pos.x - mouseLocal.x
-      const dy = tet.pos.y - mouseLocal.y
-      const dist2D = Math.sqrt(dx * dx + dy * dy)
-      if (dist2D < REPULSE_RADIUS && dist2D > 0.001) {
-        const force = (1 - dist2D / REPULSE_RADIUS) * REPULSE_STRENGTH * f
-        tet.repulse.x += (dx / dist2D) * force
-        tet.repulse.y += (dy / dist2D) * force
-      }
-    }
-    tet.repulse.multiplyScalar(Math.pow(REPULSE_DECAY, f))
-
-    let px = tet.pos.x + tet.repulse.x
-    let py = tet.pos.y + tet.repulse.y
+    // 先算链式相位 lerp 得到本帧「应到」位置；排斥随后再叠加——
+    // 否则成形时 e = 1 会把排斥位移整个覆盖，成形图案就对鼠标无反应了
+    let px = tet.pos.x
+    let py = tet.pos.y
     let pz = tet.pos.z
 
     for (let i = 0; i < tet.phaseTargets.length; i++) {
@@ -896,7 +947,39 @@ function render() {
       py += (tgt.y - py) * e
       pz += (tgt.z - pz) * e
     }
-    tet.mesh.position.set(px, py, pz)
+
+    // 鼠标排斥 + 兴奋度（手机无指针，射线会打在屏幕中心挖洞，跳过）
+    let exciteTarget = 0
+    if (mouseLocals) {
+      const m = mouseLocals[tet.groupIdx]
+      const dx = px - m.x
+      const dy = py - m.y
+      const dist2D = Math.sqrt(dx * dx + dy * dy)
+      if (dist2D < REPULSE_RADIUS && dist2D > 0.001) {
+        const force = (1 - dist2D / REPULSE_RADIUS) * REPULSE_STRENGTH * f
+        tet.repulse.x += (dx / dist2D) * force
+        tet.repulse.y += (dy / dist2D) * force
+      }
+      if (dist2D < EXCITE_RADIUS) exciteTarget = 1 - dist2D / EXCITE_RADIUS
+    }
+    tet.excite += (exciteTarget - tet.excite) * Math.min(1, 0.15 * f)
+
+    // 冲击波环带扫过：沿径向注入冲量（点按在手机上同样可玩）
+    for (let wi = 0; wi < shockwaves.length; wi++) {
+      const wc = waveLocals[wi][tet.groupIdx]
+      const dx = px - wc.x
+      const dy = py - wc.y
+      const d = Math.sqrt(dx * dx + dy * dy)
+      const band = Math.abs(d - shockwaves[wi].age * WAVE_SPEED)
+      if (band < WAVE_WIDTH && d > 0.001) {
+        const force = (1 - band / WAVE_WIDTH) * (1 - shockwaves[wi].age / WAVE_LIFE) * WAVE_IMPULSE * f
+        tet.repulse.x += (dx / d) * force
+        tet.repulse.y += (dy / d) * force
+      }
+    }
+
+    tet.repulse.multiplyScalar(Math.pow(REPULSE_DECAY, f))
+    tet.mesh.position.set(px + tet.repulse.x, py + tet.repulse.y, pz)
 
     if (tet.pos.distanceTo(tet.target) < 0.05) {
       const { target, idx } = pickTarget(tet.groupIdx, tet.targetIdx)
@@ -904,9 +987,11 @@ function render() {
       tet.targetIdx = idx
     }
 
-    tet.mesh.rotation.x += tet.rotSpeed.x * f
-    tet.mesh.rotation.y += tet.rotSpeed.y * f
-    tet.mesh.rotation.z += tet.rotSpeed.z * f
+    const spin = 1 + tet.excite * 4
+    tet.mesh.rotation.x += tet.rotSpeed.x * spin * f
+    tet.mesh.rotation.y += tet.rotSpeed.y * spin * f
+    tet.mesh.rotation.z += tet.rotSpeed.z * spin * f
+    tet.mesh.scale.setScalar(1 + tet.excite * 0.5)
   })
 
   // Mouse rotation: suppressed through the story, restored as FIAT LUX forms
@@ -971,6 +1056,7 @@ onMounted(() => {
   window.addEventListener('resize', onResize)
   if (isMobile) setupMobileTilt()                       // 手机：朝向驱动倾斜
   else window.addEventListener('mousemove', onMouseMove) // 桌面：鼠标视差
+  window.addEventListener('click', onStageClick)         // 点击冲击波（手机点按同样有效）
   window.addEventListener('scroll', onScroll, { passive: true })
 })
 
@@ -984,6 +1070,7 @@ onUnmounted(() => {
   } else {
     window.removeEventListener('mousemove', onMouseMove)
   }
+  window.removeEventListener('click', onStageClick)
   window.removeEventListener('scroll', onScroll)
   composer?.dispose()
   renderer?.dispose()
