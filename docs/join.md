@@ -20,11 +20,8 @@ BCSSA 信息技术部（BIT）负责社团的**摄影摄像、海报设计、网
 ## 报名方式
 
 <div class="join-cta">
-  <!-- TODO: 招新开放后，把按钮换成真实链接：
-       <a class="join-cta__btn" href="GOOGLE_FORM_URL" target="_blank" rel="noopener">报名表单</a>
-       并删除下面这个占位 span 与 --soon 态。 -->
-  <span class="join-cta__btn join-cta__btn--soon" role="button" aria-disabled="true">报名表单 · 即将开放</span>
-  <p class="join-cta__note">招新开放后，这里会更新为 Google Form 报名链接。</p>
+  <a class="join-cta__btn" href="https://docs.google.com/forms/d/e/1FAIpQLSeXhcIc1UIFbQ7hIhfvjjYetUlqeBlZ815QxBmUhdihiXBTxw/viewform?usp=sharing&ouid=114069042984829797415" target="_blank" rel="noopener">报名表单</a>
+  <p class="join-cta__note">点击上方按钮，填写 Google Form 报名表即可。</p>
 </div>
 
 ## 招新流程
@@ -46,8 +43,6 @@ BCSSA 信息技术部（BIT）负责社团的**摄影摄像、海报设计、网
     <p class="join-step__desc">通过后即正式加入，开始上手真实项目，和大家一起把作品做到最好。</p>
   </div>
 </div>
-
----
 
 不限年级、不限经验，只要你对影像或技术有热情，**欢迎报名**。有问题想先聊聊？联系方式即将更新。
 
@@ -72,15 +67,9 @@ BCSSA 信息技术部（BIT）负责社团的**摄影摄像、海报设计、网
   border: 1px solid var(--vp-button-brand-border);
   transition: background .2s, transform .2s;
 }
-.join-cta__btn:not(.join-cta__btn--soon):hover {
+.join-cta__btn:hover {
   background: var(--vp-button-brand-hover-bg);
   transform: translateY(-2px);
-}
-.join-cta__btn--soon {
-  color: var(--vp-c-text-2);
-  background: var(--vp-c-default-soft);
-  border-color: var(--vp-c-divider);
-  cursor: not-allowed;
 }
 .join-cta__note {
   margin: 14px 0 0;
